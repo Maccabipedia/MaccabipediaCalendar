@@ -13,9 +13,9 @@ def main():
 
     event_result = service.events().update(
         calendarId='primary',
-        eventId='<place your event ID here>',
+        eventId='<place your event ID here>',  # TODO: Put event id here
         body={
-            "summary": 'Updated Automating calendar',
+            "summary": 'Updated Game',
             "description": 'This is a tutorial example of automating google calendar with python, updated time.',
             "start": {"dateTime": start, "timeZone": 'Asia/Jerusalem'},
             "end": {"dateTime": end, "timeZone": 'Asia/Jerusalem'},

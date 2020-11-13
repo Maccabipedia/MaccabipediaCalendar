@@ -18,7 +18,7 @@ def main():
 
     for event in events:
         start = event['start'].get('dateTime', event['start'].get('date'))
-        print(start, event['summary'])
+        print(start, event['id'], event['summary'])
 
 
 if __name__ == '__main__':
