@@ -45,6 +45,8 @@ def get_stadium(x):
 def get_competition(x):
     return {
         'ליגת הבורסה לניירות ערך': 'ליגת העל',
+        'ליגת Winner': 'ליגת העל',
+        "ליגת ג׳פניקה": 'ליגת העל',
     }.get(x, x)
 
 
@@ -64,33 +66,56 @@ def convert_date(date_str, time):
     return datetime(year, month, day, hour, minutes)
 
 
+def get_result(div):
+    maccabi_score_span = div.find("span", {"class": "ss maccabi h"})
+    rival_score_span = div.find("span", {"class": "ss h"})
+    if not maccabi_score_span or not rival_score_span:
+        return ''
+
+    maccabi_score = maccabi_score_span.text
+    rival_score = rival_score_span.text
+
+    if maccabi_score > rival_score:
+        return f"\nניצחון {maccabi_score} - {rival_score}"
+    elif maccabi_score == rival_score:
+        return f"\nתיקו {maccabi_score} - {rival_score}"
+    else:
+        return f"\nהפסד {maccabi_score} - {rival_score}"
+
+
 def handle_game(game):
     location_info = game.find("div", {"class": "location"})
-    date = location_info.find("span").text
-    time_stadium = location_info.find("div").text
-    time_stadium = time_stadium.split(' ')
-    date = convert_date(date, time_stadium[0])
-    start = date.isoformat()
-    end = (date + timedelta(hours=2)).isoformat()
+    time_stadium = location_info.find("div").text.split(' ')
+
     location = get_stadium(time_stadium[1])
+
+    date = location_info.find("span").text
+    date = convert_date(date, time_stadium[0])
+    start_date = date.isoformat()
+    end_date = (date + timedelta(hours=2)).isoformat()
     time_zone = 'Asia/Jerusalem'
+
     if game.find("div", {"class": "Home"}) is not None:
         home_away = ' - בית'
     else:
         home_away = ' - חוץ'
 
-    fixture = get_competition(game.find("div", {"class": "league-title"}).text) + ', ' + game.find("div", {"class": "round"}).text
+    fixture = get_competition(game.find("div", {"class": "league-title"}).text)
+    if game.find("div", {"class": "round"}) is not None:
+        fixture = fixture + ', ' + game.find("div", {"class": "round"}).text
+
+    result = get_result(game.find("div", {"class": "holder split"}))
 
     event = {
         'summary': game.find("div", {"class": "holder notmaccabi nn"}).text + home_away,
         'location': location,
-        'description': fixture + '\n<a href="https://maccabipedia.co.il">Maccabipedia</a>',
+        'description': fixture + result + '\n<a href="https://maccabipedia.co.il">Maccabipedia</a>',
         'start': {
-            'dateTime': start,
+            'dateTime': start_date,
             'timeZone': time_zone,
         },
         'end': {
-            'dateTime': end,
+            'dateTime': end_date,
             'timeZone': time_zone,
         },
     }
@@ -100,10 +125,8 @@ def handle_game(game):
     return event
 
 
-def get_games():
-    # Set the URL you want to web scrape from
-    url = \
-        'https://www.maccabi-tlv.co.il/%D7%9E%D7%A9%D7%97%D7%A7%D7%99%D7%9D-%D7%95%D7%AA%D7%95%D7%A6%D7%90%D7%95%D7%AA/'
+def get_games(url):
+    # url = the URL to web scrape from
 
     # Connect to the URL
     response = requests.get(url)
@@ -122,4 +145,5 @@ def get_games():
 
 
 if __name__ == '__main__':
-    get_games()
+    upcoming_games = 'https://www.maccabi-tlv.co.il/%d7%9e%d7%a9%d7%97%d7%a7%d7%99%d7%9d-%d7%95%d7%aa%d7%95%d7%a6%d7%90%d7%95%d7%aa/%d7%94%d7%a7%d7%91%d7%95%d7%a6%d7%94-%d7%94%d7%91%d7%95%d7%92%d7%a8%d7%aa/%d7%9c%d7%95%d7%97-%d7%9e%d7%a9%d7%97%d7%a7%d7%99%d7%9d/'
+    get_games(upcoming_games)
