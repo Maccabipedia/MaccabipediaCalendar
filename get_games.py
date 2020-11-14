@@ -42,6 +42,12 @@ def get_stadium(x):
     }.get(x, '')
 
 
+def get_competition(x):
+    return {
+        'ליגת הבורסה לניירות ערך': 'ליגת העל',
+    }.get(x, x)
+
+
 def convert_date(date_str, time):
     arr = date_str.split(' ')
     year = int(arr[2])
@@ -73,12 +79,12 @@ def handle_game(game):
     else:
         home_away = ' - חוץ'
 
-    fixture = game.find("div", {"class": "league-title"}).text + ', ' + game.find("div", {"class": "round"}).text
+    fixture = get_competition(game.find("div", {"class": "league-title"}).text) + ', ' + game.find("div", {"class": "round"}).text
 
     event = {
         'summary': game.find("div", {"class": "holder notmaccabi nn"}).text + home_away,
         'location': location,
-        'description': fixture,
+        'description': fixture + '\n<a href="https://maccabipedia.co.il">Maccabipedia</a>',
         'start': {
             'dateTime': start,
             'timeZone': time_zone,

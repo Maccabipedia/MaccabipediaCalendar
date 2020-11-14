@@ -8,7 +8,7 @@ def main():
     now = datetime.datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
     print('Getting List o 10 events')
     events_result = service.events().list(
-        calendarId='primary', timeMin=now,
+        calendarId='uvtou62l55g03ql7jq9qr7hjt0@group.calendar.google.com', timeMin=now,
         maxResults=10, singleEvents=True,
         orderBy='startTime').execute()
     events = events_result.get('items', [])
@@ -18,7 +18,7 @@ def main():
 
     for event in events:
         start = event['start'].get('dateTime', event['start'].get('date'))
-        print(start, event['id'], event['summary'])
+        print(start, event['id'], event['summary'], event['description'])
 
 
 if __name__ == '__main__':
