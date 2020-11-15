@@ -1,9 +1,7 @@
-from datetime import datetime, timedelta
 from cal_setup import get_calendar_service
 
 
-def update_event(new_event, event_id, calendar_id):
-    # update the event to tomorrow 8 AM IST
+def update_event(new_event: dict, event_id: str, calendar_id: str) -> None:
     service = get_calendar_service()
 
     event_result = service.events().update(

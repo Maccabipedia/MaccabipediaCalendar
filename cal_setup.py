@@ -1,4 +1,3 @@
-import datetime
 import pickle
 import os.path
 from googleapiclient.discovery import build
@@ -13,6 +12,7 @@ CREDENTIALS_FILE = 'credentials.json'
 
 def get_calendar_service():
     creds = None
+
     # The file token.pickle stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first time
 

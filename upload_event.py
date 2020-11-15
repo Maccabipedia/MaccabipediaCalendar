@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from cal_setup import get_calendar_service
 
 
-def create_event(event, calendar_id):
+def upload_event(event: dict, calendar_id: str) -> None:
     service = get_calendar_service()
 
     event_result = service.events().insert(calendarId=calendar_id, body=event).execute()

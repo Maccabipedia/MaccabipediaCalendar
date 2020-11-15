@@ -1,16 +1,26 @@
 from datetime import datetime
 
-import pytz
-
 from parse_games import parse_games
-from upload_event import create_event
+from upload_event import upload_event
 from update_event import update_event
-from list_events import get_list_events
+from list_events import get_events_list
 from delete_event import delete_event
 
 
 # Check if game if already on the calendar by comparing the links to game page in the official site
-def event_already_exist(event, curr_events):
+def event_already_exist(event: dict, curr_events: list) -> str:
+    """
+    Checking if the parsed game is exists in the calendar.
+    If it is, return the id of the existing event, else return empty str
+
+    :param event: event to search
+    :type event: dict
+    :param curr_events: list of events to compare to
+    :type curr_events: list
+    :return: event id or empty str
+    :rtype: str
+    """
+
     if curr_events:
         for curr_event in curr_events:
             if 'extendedProperties' in curr_event and 'extendedProperties' in event:
@@ -43,7 +53,7 @@ def main():
                season_19_20, season_20_21]
 
     time = datetime.utcnow().isoformat() + 'Z'
-    curr_events = get_list_events(calender_id, time)
+    curr_events = get_events_list(calender_id, time)
     # url - the URL to scrape from
     url = upcoming_games
     new_events = parse_games(url, False)
@@ -54,7 +64,7 @@ def main():
             # TODO: Add comparison to avoid updating unchanged events (purpose: reduce syncing)
             update_event(event, event_id, calender_id)
         else:
-            create_event(event, calender_id)
+            upload_event(event, calender_id)
 
     # deleting canceled/delayed/irrelevant events
     if curr_events:
@@ -66,7 +76,7 @@ def main():
     # updating last game result
     url = seasons[len(seasons) - 1]
     last_game_update = parse_games(url, True)[0]
-    last_event = get_list_events(calender_id, last_game_update['start']['dateTime'] + '+02:00', 1)[0]
+    last_event = get_events_list(calender_id, last_game_update['start']['dateTime'] + '+02:00', 1)[0]
     if 'extendedProperties' in last_game_update and 'extendedProperties' in last_event:
         if last_game_update['extendedProperties']['shared']['url'] == last_event['extendedProperties']['shared']['url']:
             if last_event['extendedProperties']['shared']['result'] == '':

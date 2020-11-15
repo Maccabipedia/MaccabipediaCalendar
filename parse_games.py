@@ -3,14 +3,14 @@ from datetime import datetime, timedelta
 from bs4 import BeautifulSoup
 
 
-def get_channel(x):
+def get_channel(x: str) -> str:
     return {
         'https://static.maccabi-tlv.co.il/wp-content/uploads/2015/11/1949-300x62.png': '\nספורט1',
         'https://static.maccabi-tlv.co.il/wp-content/uploads/2015/11/sport-chanel.png': '\nערוץ הספורט'
     }.get(x, '')
 
 
-def get_month(x):
+def get_month(x: str) -> int:
     return {
         'ינו': 1,
         'פבר': 2,
@@ -27,7 +27,7 @@ def get_month(x):
     }.get(x)
 
 
-def get_stadium(x):
+def get_stadium(x: str) -> int:
     return {
         'בלומפילד': 'אצטדיון בלומפילד',
         'נתניה': 'אצטדיון עירוני נתניה',
@@ -49,7 +49,7 @@ def get_stadium(x):
     }.get(x, '')
 
 
-def get_competition(x):
+def get_competition(x: str) -> str:
     return {
         'ליגת הבורסה לניירות ערך': 'ליגת העל',
         'ליגת Winner': 'ליגת העל',
@@ -57,7 +57,17 @@ def get_competition(x):
     }.get(x, x)
 
 
-def convert_date(date_str, time):
+def format_datetime(date_str: str, time: str) -> datetime:
+    """formatting date & time correctly
+
+        :param date_str: string of html, contains date
+        :type date_str: class 'bs4.element.Tag'
+        :param time: contains time (format: XX:XX)
+        :type time: str
+        :return: string with the result if there is data, else returns empty string
+        :rtype: datetime
+    """
+
     arr = date_str.split(' ')
     year = int(arr[2])
     month = get_month(arr[1])
@@ -73,14 +83,21 @@ def convert_date(date_str, time):
     return datetime(year, month, day, hour, minutes)
 
 
-def get_result(div):
-    maccabi_score_span = div.find("span", {"class": "ss maccabi h"})
-    rival_score_span = div.find("span", {"class": "ss h"})
-    if not maccabi_score_span or not rival_score_span:
+def get_result(div: BeautifulSoup):
+    """parsing div to get the game's result
+
+    :param div: string of html
+    :type div: class 'bs4.element.Tag'
+    :return: string with the result if there is data, else returns empty string
+    :rtype: str
+    """
+    maccabi_score = div.find("span", {"class": "ss maccabi h"})
+    rival_score = div.find("span", {"class": "ss h"})
+    if not maccabi_score or not rival_score:
         return ''
 
-    maccabi_score = maccabi_score_span.text
-    rival_score = rival_score_span.text
+    maccabi_score = maccabi_score.text
+    rival_score = rival_score.text
 
     if maccabi_score > rival_score:
         return f"\nניצחון {maccabi_score} - {rival_score}"
@@ -90,7 +107,15 @@ def get_result(div):
         return f"\nהפסד {maccabi_score} - {rival_score}"
 
 
-def handle_game(game):
+def handle_game(game: BeautifulSoup) -> dict:
+    """Parsing single game to event
+
+    :param game: html string - BeautifulSoup
+    :type game: BeautifulSoup
+    :return: event
+    :rtype: dict
+    """
+
     page_link = game.find('a', href=True)['href']
     # Connect to the URL
     response = requests.get(page_link)
@@ -111,7 +136,7 @@ def handle_game(game):
     location = get_stadium(time_stadium[1])
 
     date = location_info.find("span").text
-    date = convert_date(date, time_stadium[0])
+    date = format_datetime(date, time_stadium[0])
     start_date = date.isoformat()
     end_date = (date + timedelta(hours=2)).isoformat()
     time_zone = 'Asia/Jerusalem'
@@ -154,8 +179,17 @@ def handle_game(game):
     return event
 
 
-def parse_games(url, to_update_last_game):
-    # url = the URL to web scrape from
+def parse_games(url: str, to_update_last_game: bool = False) -> list:
+    """Gets games from the official site, parse them and return as list of events
+
+    :param url: The URL to web scrap from
+    :type url: str
+    :param to_update_last_game: Optional. A flag to indicate if to get only the last played game or all events
+    :type to_update_last_game: bool, optional
+    :return: a list of events representing the games
+    :rtype: list
+    """
+
     # Connect to the URL
     response = requests.get(url)
 
@@ -168,11 +202,12 @@ def parse_games(url, to_update_last_game):
         games = soup.findAll("div", {"class": "fixtures-holder"})
         print(f"List of {len(games)} parsed games:")
         for game in games:
-            # ignoring games without final schedule
+            # Ignoring games without final schedule or U19 league
             if game.find(text='מועד לא סופי') is None or game.find(text='נוער') is None:
                 event = handle_game(game)
                 events.append(event)
     else:
+        # Getting last game result
         game = soup.find("div", {"class": "fixtures-holder"})
         event = handle_game(game)
         events.append(event)
@@ -181,5 +216,7 @@ def parse_games(url, to_update_last_game):
 
 
 if __name__ == '__main__':
-    upcoming_games = 'https://www.maccabi-tlv.co.il/%d7%9e%d7%a9%d7%97%d7%a7%d7%99%d7%9d-%d7%95%d7%aa%d7%95%d7%a6%d7%90%d7%95%d7%aa/%d7%94%d7%a7%d7%91%d7%95%d7%a6%d7%94-%d7%94%d7%91%d7%95%d7%92%d7%a8%d7%aa/%d7%9c%d7%95%d7%97-%d7%9e%d7%a9%d7%97%d7%a7%d7%99%d7%9d/'
+    upcoming_games = 'https://www.maccabi-tlv.co.il/%d7%9e%d7%a9%d7%97%d7%a7%d7%99%d7%9d-%d7%95%d7%aa%d7%95%d7%a6%d7' \
+                     '%90%d7%95%d7%aa/%d7%94%d7%a7%d7%91%d7%95%d7%a6%d7%94-%d7%94%d7%91%d7%95%d7%92%d7%a8%d7%aa/%d7' \
+                     '%9c%d7%95%d7%97-%d7%9e%d7%a9%d7%97%d7%a7%d7%99%d7%9d/ '
     parse_games(upcoming_games, False)
