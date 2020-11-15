@@ -3,6 +3,13 @@ from datetime import datetime, timedelta
 from bs4 import BeautifulSoup
 
 
+def get_channel(x):
+    return {
+        'https://static.maccabi-tlv.co.il/wp-content/uploads/2015/11/1949-300x62.png': '\nספורט1',
+        'https://static.maccabi-tlv.co.il/wp-content/uploads/2015/11/sport-chanel.png': '\nערוץ הספורט'
+    }.get(x, '')
+
+
 def get_month(x):
     return {
         'ינו': 1,
@@ -84,6 +91,20 @@ def get_result(div):
 
 
 def handle_game(game):
+    page_link = game.find('a', href=True)['href']
+    # Connect to the URL
+    response = requests.get(page_link)
+
+    # Parse HTML and save to BeautifulSoup object
+    soup = BeautifulSoup(response.text, 'html.parser')
+
+    img_src = soup.find("div", {"class": "tv"})
+    if img_src.contents:
+        img_src = img_src.find('img')['src']
+    else:
+        img_src = ''
+    channel = get_channel(img_src)
+
     location_info = game.find("div", {"class": "location"})
     time_stadium = location_info.find("div").text.split(' ')
 
@@ -109,7 +130,7 @@ def handle_game(game):
     event = {
         'summary': game.find("div", {"class": "holder notmaccabi nn"}).text + home_away,
         'location': location,
-        'description': fixture + result + '\n<a href="https://maccabipedia.co.il">Maccabipedia</a>',
+        'description': fixture + result + channel + '\n<a href="https://maccabipedia.co.il">מכביפדיה</a>',
         'start': {
             'dateTime': start_date,
             'timeZone': time_zone,
@@ -118,16 +139,23 @@ def handle_game(game):
             'dateTime': end_date,
             'timeZone': time_zone,
         },
+        "source": {
+            "url": 'https://www.maccabipedia.co.il/',  # TODO: Add link to game page in maccabipedia
+            "title": 'עמוד המשחק'
+        },
+        "extendedProperties": {
+            "shared": {
+                "url": page_link,
+                "result": result
+            }
+        },
     }
-
     print(event)
-
     return event
 
 
-def get_games(url):
+def parse_games(url, to_update_last_game):
     # url = the URL to web scrape from
-
     # Connect to the URL
     response = requests.get(url)
 
@@ -135,15 +163,23 @@ def get_games(url):
     soup = BeautifulSoup(response.text, 'html.parser')
 
     events = []
-    games = soup.findAll("div", {"class": "fixtures-holder"})
-    for game in games:
-        if game.find(text='מועד לא סופי') is None:
-            event = handle_game(game)
-            events.append(event)
+
+    if not to_update_last_game:
+        games = soup.findAll("div", {"class": "fixtures-holder"})
+        print(f"List of {len(games)} parsed games:")
+        for game in games:
+            # ignoring games without final schedule
+            if game.find(text='מועד לא סופי') is None or game.find(text='נוער') is None:
+                event = handle_game(game)
+                events.append(event)
+    else:
+        game = soup.find("div", {"class": "fixtures-holder"})
+        event = handle_game(game)
+        events.append(event)
 
     return events
 
 
 if __name__ == '__main__':
     upcoming_games = 'https://www.maccabi-tlv.co.il/%d7%9e%d7%a9%d7%97%d7%a7%d7%99%d7%9d-%d7%95%d7%aa%d7%95%d7%a6%d7%90%d7%95%d7%aa/%d7%94%d7%a7%d7%91%d7%95%d7%a6%d7%94-%d7%94%d7%91%d7%95%d7%92%d7%a8%d7%aa/%d7%9c%d7%95%d7%97-%d7%9e%d7%a9%d7%97%d7%a7%d7%99%d7%9d/'
-    get_games(upcoming_games)
+    parse_games(upcoming_games, False)
