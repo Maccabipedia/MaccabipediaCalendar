@@ -1,4 +1,6 @@
 import requests
+import json
+import re
 from datetime import datetime, timedelta
 from bs4 import BeautifulSoup
 
@@ -116,9 +118,9 @@ def handle_game(game: BeautifulSoup) -> dict:
     :rtype: dict
     """
 
-    page_link = game.find('a', href=True)['href']
+    official_game_page = game.find('a', href=True)['href']
     # Connect to the URL
-    response = requests.get(page_link)
+    response = requests.get(official_game_page)
 
     # Parse HTML and save to BeautifulSoup object
     soup = BeautifulSoup(response.text, 'html.parser')
@@ -135,10 +137,10 @@ def handle_game(game: BeautifulSoup) -> dict:
 
     location = get_stadium(time_stadium[1])
 
-    date = location_info.find("span").text
-    date = format_datetime(date, time_stadium[0])
-    start_date = date.isoformat()
-    end_date = (date + timedelta(hours=2)).isoformat()
+    game_date_str = location_info.find("span").text
+    game_date = format_datetime(game_date_str, time_stadium[0])
+    start_date = game_date.isoformat()
+    end_date = (game_date + timedelta(hours=2)).isoformat()
     time_zone = 'Asia/Jerusalem'
 
     if game.find("div", {"class": "Home"}) is not None:
@@ -152,10 +154,21 @@ def handle_game(game: BeautifulSoup) -> dict:
 
     result = get_result(game.find("div", {"class": "holder split"}))
 
+    # Get link to game page at maccabipedia
+    response = requests.get(f"https://www.maccabipedia.co.il/index.php?title=Special:CargoExport&format=json&tables=Games_Catalog&fields=_pageName&where=Games_Catalog.Date='{game_date.date()}'")
+    page_name = json.loads(response.text)
+    if page_name and '_pageName' in page_name[0]:
+        page_name = page_name[0]['_pageName']
+        page_name = re.sub(r"\s+", '_', page_name)  # Replacing spaces/whitespace with underscore
+        game_page_link = f'\n<a href="https://maccabipedia.co.il/{page_name}">עמוד המשחק</a>'
+    else:
+        page_name = ''
+        game_page_link = f'\n<a href="https://maccabipedia.co.il">מכביפדיה</a>'
+
     event = {
         'summary': game.find("div", {"class": "holder notmaccabi nn"}).text + home_away,
         'location': location,
-        'description': fixture + result + channel + '\n<a href="https://maccabipedia.co.il">מכביפדיה</a>',
+        'description': fixture + result + channel + game_page_link,
         'start': {
             'dateTime': start_date,
             'timeZone': time_zone,
@@ -164,14 +177,14 @@ def handle_game(game: BeautifulSoup) -> dict:
             'dateTime': end_date,
             'timeZone': time_zone,
         },
-        "source": {
-            "url": 'https://www.maccabipedia.co.il/',  # TODO: Add link to game page in maccabipedia
-            "title": 'עמוד המשחק'
+        'source': {
+            'url': f'https://www.maccabipedia.co.il/{page_name}',
+            'title': 'עמוד המשחק'
         },
-        "extendedProperties": {
-            "shared": {
-                "url": page_link,
-                "result": result
+        'extendedProperties': {
+            'shared': {
+                'url': official_game_page,
+                'result': result
             }
         },
     }
@@ -179,7 +192,7 @@ def handle_game(game: BeautifulSoup) -> dict:
     return event
 
 
-def parse_games(url: str, to_update_last_game: bool = False) -> list:
+def get_parsed_games(url: str, to_update_last_game: bool = False) -> list:
     """Gets games from the official site, parse them and return as list of events
 
     :param url: The URL to web scrap from
@@ -203,7 +216,7 @@ def parse_games(url: str, to_update_last_game: bool = False) -> list:
         print(f"List of {len(games)} parsed games:")
         for game in games:
             # Ignoring games without final schedule or U19 league
-            if game.find(text='מועד לא סופי') is None or game.find(text='נוער') is None:
+            if game.find(text='מועד לא סופי') is None and game.find(text='נוער') is None:
                 event = handle_game(game)
                 events.append(event)
     else:
@@ -216,7 +229,5 @@ def parse_games(url: str, to_update_last_game: bool = False) -> list:
 
 
 if __name__ == '__main__':
-    upcoming_games = 'https://www.maccabi-tlv.co.il/%d7%9e%d7%a9%d7%97%d7%a7%d7%99%d7%9d-%d7%95%d7%aa%d7%95%d7%a6%d7' \
-                     '%90%d7%95%d7%aa/%d7%94%d7%a7%d7%91%d7%95%d7%a6%d7%94-%d7%94%d7%91%d7%95%d7%92%d7%a8%d7%aa/%d7' \
-                     '%9c%d7%95%d7%97-%d7%9e%d7%a9%d7%97%d7%a7%d7%99%d7%9d/ '
-    parse_games(upcoming_games, False)
+    upcoming_games = 'https://www.maccabi-tlv.co.il/%d7%9e%d7%a9%d7%97%d7%a7%d7%99%d7%9d-%d7%95%d7%aa%d7%95%d7%a6%d7%90%d7%95%d7%aa/%d7%94%d7%a7%d7%91%d7%95%d7%a6%d7%94-%d7%94%d7%91%d7%95%d7%92%d7%a8%d7%aa/%d7%9c%d7%95%d7%97-%d7%9e%d7%a9%d7%97%d7%a7%d7%99%d7%9d/'
+    get_parsed_games(upcoming_games, False)

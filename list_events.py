@@ -32,9 +32,9 @@ def get_events_list(calendar_id: str, time_min: str, num_of_events: int = 2500) 
         print('No upcoming events found')
     else:
         print(f'Found {len(events)} events:')
-        for event in events:
-            # delete_event(event['id'], calendar_id)  # TODO: Delete line
-            print(event)
+        # for event in events:
+        # delete_event(event['id'], calendar_id)  # Deleting all events
+
     return events
 
 
