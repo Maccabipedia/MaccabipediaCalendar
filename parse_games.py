@@ -8,7 +8,7 @@ import bs4
 import requests
 from bs4 import BeautifulSoup
 
-from types import Event
+from my_typing import Event
 
 _logger = logging.getLogger(__name__)
 
@@ -67,15 +67,13 @@ def get_competition(x: str) -> str:
     }.get(x, x)
 
 
-def format_datetime(date_str: str, time: str) -> datetime:
-    """formatting date & time correctly
+def format_datetime(date_str: bs4.element.Tag, time: str) -> datetime:
+    """
+    formatting date & time correctly
 
-        :param date_str: string of html, contains date
-        :type date_str: class 'bs4.element.Tag'
-        :param time: contains time (format: XX:XX)
-        :type time: str
-        :return: string with the result if there is data, else returns empty string
-        :rtype: datetime
+    :param date_str: string of html, contains date
+    :param time: contains time (format: XX:XX)
+    :return: string with the result if there is data, else returns empty string
     """
 
     arr = date_str.split(' ')

@@ -5,7 +5,7 @@ from typing import Dict, List
 from edit_event import upload_event, update_event, delete_event
 from get_lists import fetch_games_from_calendar
 from parse_games import parse_games_from_url
-from types import Event
+from my_typing import Event
 
 _logger = logging.getLogger(__name__)
 

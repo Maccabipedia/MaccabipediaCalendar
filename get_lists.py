@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import List, Optional
 
 from cal_setup import get_calendar_service
-from types import Event
+from my_typing import Event
 
 _logger = logging.getLogger(__name__)
 
