@@ -223,7 +223,7 @@ def parse_games_from_url(url: str, to_update_last_game: Optional[bool] = False) 
                 event = handle_game(game)
                 events.append(event)
             else:
-                _logger.info(f'Ignoring game without final date or a U19 game: {game}')
+                _logger.debug(f'Ignoring game without final date or a U19 game: {game}')
     else:
         # Getting last game result
         game = soup.find("div", {"class": "fixtures-holder"})

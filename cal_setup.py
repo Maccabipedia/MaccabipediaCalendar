@@ -1,5 +1,7 @@
 import pickle
 import os.path
+
+import googleapiclient
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
@@ -10,7 +12,7 @@ SCOPES = ['https://www.googleapis.com/auth/calendar']
 CREDENTIALS_FILE = 'credentials.json'
 
 
-def get_calendar_service():
+def get_calendar_service() -> googleapiclient.discovery.Resource:
     creds = None
 
     # The file token.pickle stores the user's access and refresh tokens, and is

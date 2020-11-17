@@ -71,7 +71,7 @@ def fetch_games_from_calendar(calendar_id: str, fetch_after_this_time: str,
 
 if __name__ == '__main__':
     # get_calendars_list()
-    calendar_id = 'uvtou62l55g03ql7jq9qr7hjt0@group.calendar.google.com'  # id of maccabi games calendar
+    maccabi_calendar_id = 'uvtou62l55g03ql7jq9qr7hjt0@group.calendar.google.com'  # id of maccabi games calendar
     now = datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
     time = datetime(2011, 1, 1, 0, 0).isoformat() + 'Z'  # 'Z' indicates UTC time
-    fetch_games_from_calendar(calendar_id, time)
+    fetch_games_from_calendar(maccabi_calendar_id, time)

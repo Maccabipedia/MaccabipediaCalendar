@@ -112,11 +112,11 @@ def main(calendar_id):
     # add_history_games(seasons, calendar_id)
 
     time = datetime.utcnow().isoformat() + 'Z'  # current datetime - to update and add upcoming games only
-    new_events = parse_games_from_url(upcoming_games, False)
+    upcoming_events = parse_games_from_url(upcoming_games, False)
     curr_events = fetch_games_from_calendar(calendar_id, time)
 
-    add_update_events(new_events, curr_events, calendar_id)
-    delete_unnecessary_events(new_events, curr_events, calendar_id)
+    add_update_events(upcoming_events, curr_events, calendar_id)
+    delete_unnecessary_events(upcoming_events, curr_events, calendar_id)
     update_last_game(seasons[len(seasons) - 1], calendar_id)
 
 
