@@ -1,23 +1,21 @@
+import logging
 from datetime import datetime
+from typing import Dict, List
 
-from parse_games import get_parsed_games
 from edit_event import upload_event, update_event, delete_event
 from get_lists import get_events_list
+from parse_games import parse_games_from_url
 
 
-# Check if game if already on the calendar
-def event_already_exist(event: dict, events_list: list) -> dict:
-    """Checking if the parsed game is exists in the calendar by comparing links to game page in the official site.
+def event_already_exist(event: Dict, events_list: List) -> Dict:
+    """
+    Checking if the parsed game is exists in the calendar by comparing links to game page in the official site.
     If it is, return the existing event, else return empty
 
     :param event: event to search
-    :type event: dict
     :param events_list: list of events to compare to
-    :type events_list: list
     :return: event or empty object
-    :rtype: dict
     """
-
     if events_list:
         for temp_event in events_list:
             if 'extendedProperties' in temp_event and 'extendedProperties' in event:
@@ -30,18 +28,14 @@ def event_already_exist(event: dict, events_list: list) -> dict:
     return {}
 
 
-def add_update_events(events_list: list, curr_events_list: list, calendar_id: str) -> None:
-    """Updating & adding upcoming games
+def add_update_events(events_list: List, curr_events_list: List, calendar_id: str) -> None:
+    """
+    Updating & adding upcoming games
 
     :param events_list: list of the most updated events
-    :type events_list: list
     :param curr_events_list: list of the current events
-    :type curr_events_list: list
     :param calendar_id: id of calendar to add games to
-    :type calendar_id: str
-    :return: none
     """
-
     for event in events_list:
         curr_event = event_already_exist(event, curr_events_list)
         if curr_event != {}:
@@ -52,19 +46,15 @@ def add_update_events(events_list: list, curr_events_list: list, calendar_id: st
             upload_event(event, calendar_id)
 
 
-def delete_unnecessary_events(events_list: list, curr_events_list: list, calendar_id: str) -> None:
-    """Deleting canceled/delayed/irrelevant events.
+def delete_unnecessary_events(events_list: List, curr_events_list: List, calendar_id: str) -> None:
+    """
+    Deleting canceled/delayed/irrelevant events.
     Event which is in the calendar but not in the events list will be deleted
 
     :param events_list: list of the most updated events
-    :type events_list: list
     :param curr_events_list: list of the current events
-    :type curr_events_list: list
     :param calendar_id: id of calendar to delete from
-    :type calendar_id: str
-    :return: none
     """
-
     if curr_events_list:
         for event in curr_events_list:
             exist_event = event_already_exist(event, events_list)
@@ -74,16 +64,13 @@ def delete_unnecessary_events(events_list: list, curr_events_list: list, calenda
 
 
 def update_last_game(url: str, calendar_id: str) -> None:
-    """Updating the last game result & adding link to game page at maccabipedia
+    """
+    Updating the last game result & adding link to game page at maccabipedia
 
     :param url: URL of the season game results
-    :type url: str
     :param calendar_id: id of calendar to update
-    :type calendar_id: str
-    :return: none
     """
-
-    last_game = get_parsed_games(url, True)[0]
+    last_game = parse_games_from_url(url, True)[0]
     last_event = get_events_list(calendar_id, last_game['start']['dateTime'] + '+02:00', 1)[0]
     if 'extendedProperties' in last_game and 'extendedProperties' in last_event:
         if last_game['extendedProperties']['shared']['url'] == last_event['extendedProperties']['shared']['url']:
@@ -91,24 +78,20 @@ def update_last_game(url: str, calendar_id: str) -> None:
                 update_event(last_game, last_event['id'], calendar_id)
 
 
-def add_history_games(seasons: list, calendar_id: str) -> None:
-    """Loop over all past seasons URLs and adding the games to the calendar
+def add_history_games(seasons: List, calendar_id: str) -> None:
+    """
+    Loop over all past seasons URLs and adding the games to the calendar
 
     :param seasons: list of URLs to seasons list of games
-    :type seasons: list
     :param calendar_id: id of calendar to update
-    :type calendar_id: str
-    :return: none
     """
-
     for season in seasons:
-        events = get_parsed_games(season, False)
+        events = parse_games_from_url(season, False)
         for event in events:
             upload_event(event, calendar_id)
 
 
 def main(calendar_id):
-
     season_12_13 = 'https://www.maccabi-tlv.co.il/%d7%9e%d7%a9%d7%97%d7%a7%d7%99%d7%9d-%d7%95%d7%aa%d7%95%d7%a6%d7%90%d7%95%d7%aa/%d7%94%d7%a7%d7%91%d7%95%d7%a6%d7%94-%d7%94%d7%91%d7%95%d7%92%d7%a8%d7%aa/%d7%aa%d7%95%d7%a6%d7%90%d7%95%d7%aa/?season=2#content'
     season_13_14 = 'https://www.maccabi-tlv.co.il/%d7%9e%d7%a9%d7%97%d7%a7%d7%99%d7%9d-%d7%95%d7%aa%d7%95%d7%a6%d7%90%d7%95%d7%aa/%d7%94%d7%a7%d7%91%d7%95%d7%a6%d7%94-%d7%94%d7%91%d7%95%d7%92%d7%a8%d7%aa/%d7%aa%d7%95%d7%a6%d7%90%d7%95%d7%aa/?season=74#content'
     season_14_15 = 'https://www.maccabi-tlv.co.il/%d7%9e%d7%a9%d7%97%d7%a7%d7%99%d7%9d-%d7%95%d7%aa%d7%95%d7%a6%d7%90%d7%95%d7%aa/%d7%94%d7%a7%d7%91%d7%95%d7%a6%d7%94-%d7%94%d7%91%d7%95%d7%92%d7%a8%d7%aa/%d7%aa%d7%95%d7%a6%d7%90%d7%95%d7%aa/?season=75#content'
@@ -126,7 +109,7 @@ def main(calendar_id):
     # add_history_games(seasons, calendar_id)
 
     time = datetime.utcnow().isoformat() + 'Z'  # current datetime - to update and add upcoming games only
-    new_events = get_parsed_games(upcoming_games, False)
+    new_events = parse_games_from_url(upcoming_games, False)
     curr_events = get_events_list(calendar_id, time)
 
     add_update_events(new_events, curr_events, calendar_id)
@@ -135,5 +118,7 @@ def main(calendar_id):
 
 
 if __name__ == '__main__':
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
     maccabipedia_games_calendar_id = 'uvtou62l55g03ql7jq9qr7hjt0@group.calendar.google.com'
+
     main(maccabipedia_games_calendar_id)
