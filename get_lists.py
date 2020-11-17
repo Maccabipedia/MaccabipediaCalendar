@@ -1,6 +1,32 @@
-from datetime import datetime
 from cal_setup import get_calendar_service
-from delete_event import delete_event
+from datetime import datetime
+from edit_event import delete_event
+
+
+def get_calendars_list() -> list:
+    """Returns list of calendars
+
+    :return: A list of calendars
+    :rtype: list
+    """
+    service = get_calendar_service()
+    # Call the Calendar API
+    print('Getting list of calendars...')
+    calendars_result = service.calendarList().list().execute()
+    calendars = calendars_result.get('items', [])
+
+    if not calendars:
+        print('No calendars found')
+
+    print(f'{len(calendars)} calendars found:\n')
+    for calendar in calendars:
+        summary = calendar['summary']
+        desc = calendar['description'] if calendar.get('description') else 'null'
+        cal_id = calendar['id']
+        primary = '- Primary \n' if calendar.get('primary') else ''
+        print(f'Calendar: \n- Summary: {summary}\n- Desc:{desc}\n- ID: {cal_id}\n{primary}')
+
+    return calendars
 
 
 def get_events_list(calendar_id: str, time_min: str, num_of_events: int = 2500) -> list:
@@ -39,7 +65,9 @@ def get_events_list(calendar_id: str, time_min: str, num_of_events: int = 2500) 
 
 
 if __name__ == '__main__':
+    # get_calendars_list()
     cal_id = 'uvtou62l55g03ql7jq9qr7hjt0@group.calendar.google.com'  # id of maccabi games calendar
     now = datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
     time = datetime(2011, 1, 1, 0, 0).isoformat() + 'Z'  # 'Z' indicates UTC time
     get_events_list(cal_id, time)
+

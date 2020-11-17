@@ -1,10 +1,8 @@
 from datetime import datetime
 
 from parse_games import get_parsed_games
-from upload_event import upload_event
-from update_event import update_event
-from list_events import get_events_list
-from delete_event import delete_event
+from edit_event import upload_event, update_event, delete_event
+from get_lists import get_events_list
 
 
 # Check if game if already on the calendar
