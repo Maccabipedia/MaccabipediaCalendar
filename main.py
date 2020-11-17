@@ -3,8 +3,11 @@ from datetime import datetime
 from typing import Dict, List
 
 from edit_event import upload_event, update_event, delete_event
-from get_lists import get_events_list
+from get_lists import fetch_games_from_calendar
 from parse_games import parse_games_from_url
+from types import Event
+
+_logger = logging.getLogger(__name__)
 
 
 def event_already_exist(event: Dict, events_list: List) -> Dict:
@@ -28,7 +31,7 @@ def event_already_exist(event: Dict, events_list: List) -> Dict:
     return {}
 
 
-def add_update_events(events_list: List, curr_events_list: List, calendar_id: str) -> None:
+def add_update_events(events_list: List[Event], curr_events_list: List[Event], calendar_id: str) -> None:
     """
     Updating & adding upcoming games
 
@@ -59,7 +62,7 @@ def delete_unnecessary_events(events_list: List, curr_events_list: List, calenda
         for event in curr_events_list:
             exist_event = event_already_exist(event, events_list)
             if exist_event == {}:
-                print(f"Deleting event {event['summary']}")
+                _logger.info(f"Deleting event {event['summary']}")
                 delete_event(event['id'], calendar_id)
 
 
@@ -71,7 +74,7 @@ def update_last_game(url: str, calendar_id: str) -> None:
     :param calendar_id: id of calendar to update
     """
     last_game = parse_games_from_url(url, True)[0]
-    last_event = get_events_list(calendar_id, last_game['start']['dateTime'] + '+02:00', 1)[0]
+    last_event = fetch_games_from_calendar(calendar_id, last_game['start']['dateTime'] + '+02:00', 1)[0]
     if 'extendedProperties' in last_game and 'extendedProperties' in last_event:
         if last_game['extendedProperties']['shared']['url'] == last_event['extendedProperties']['shared']['url']:
             if last_event['extendedProperties']['shared']['result'] == '':
@@ -110,7 +113,7 @@ def main(calendar_id):
 
     time = datetime.utcnow().isoformat() + 'Z'  # current datetime - to update and add upcoming games only
     new_events = parse_games_from_url(upcoming_games, False)
-    curr_events = get_events_list(calendar_id, time)
+    curr_events = fetch_games_from_calendar(calendar_id, time)
 
     add_update_events(new_events, curr_events, calendar_id)
     delete_unnecessary_events(new_events, curr_events, calendar_id)

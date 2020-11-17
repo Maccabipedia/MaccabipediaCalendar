@@ -4,8 +4,11 @@ import re
 from datetime import datetime, timedelta
 from typing import List, Optional
 
+import bs4
 import requests
 from bs4 import BeautifulSoup
+
+from types import Event
 
 _logger = logging.getLogger(__name__)
 
@@ -114,15 +117,13 @@ def get_result(div: BeautifulSoup):
         return f"\nהפסד {maccabi_score} - {rival_score}"
 
 
-def handle_game(game: BeautifulSoup) -> dict:
-    """Parsing single game to event
+def handle_game(game: bs4.element.Tag) -> Event:
+    """
+    Parsing single game to event
 
     :param game: html string - BeautifulSoup
-    :type game: BeautifulSoup
     :return: event
-    :rtype: dict
     """
-
     official_game_page = game.find('a', href=True)['href']
     # Connect to the URL
     response = requests.get(official_game_page)
@@ -194,11 +195,11 @@ def handle_game(game: BeautifulSoup) -> dict:
             }
         },
     }
-    print(event)
+    _logger.info(event)
     return event
 
 
-def parse_games_from_url(url: str, to_update_last_game: Optional[bool] = False) -> List:
+def parse_games_from_url(url: str, to_update_last_game: Optional[bool] = False) -> List[Event]:
     """
     Gets games from the official site, parse them and return as list of events
 
@@ -216,7 +217,7 @@ def parse_games_from_url(url: str, to_update_last_game: Optional[bool] = False) 
 
     if not to_update_last_game:
         games = soup.findAll("div", {"class": "fixtures-holder"})
-        _logger.info('List of {len(games)} parsed games:"')
+        _logger.info(f'List of {len(games)} parsed games:"')
 
         for game in games:
             # Ignoring games without final schedule or U19 league

@@ -1,6 +1,14 @@
-from cal_setup import get_calendar_service
+import logging
 from datetime import datetime
-from edit_event import delete_event
+from typing import List, Optional
+
+from cal_setup import get_calendar_service
+from types import Event
+
+_logger = logging.getLogger(__name__)
+
+
+_DEFAULT_NUMBER_OF_EVENTS_TO_FETCH = 2500
 
 
 def get_calendars_list() -> list:
@@ -11,43 +19,40 @@ def get_calendars_list() -> list:
     """
     service = get_calendar_service()
     # Call the Calendar API
-    print('Getting list of calendars...')
+    _logger.info('Getting list of calendars...')
     calendars_result = service.calendarList().list().execute()
     calendars = calendars_result.get('items', [])
 
     if not calendars:
-        print('No calendars found')
+        _logger.info('No calendars found')
 
-    print(f'{len(calendars)} calendars found:\n')
+    _logger.info(f'{len(calendars)} calendars found:\n')
     for calendar in calendars:
         summary = calendar['summary']
         desc = calendar['description'] if calendar.get('description') else 'null'
         cal_id = calendar['id']
         primary = '- Primary \n' if calendar.get('primary') else ''
-        print(f'Calendar: \n- Summary: {summary}\n- Desc:{desc}\n- ID: {cal_id}\n{primary}')
+        _logger.info(f'Calendar: \n- Summary: {summary}\n- Desc:{desc}\n- ID: {cal_id}\n{primary}')
 
     return calendars
 
 
-def get_events_list(calendar_id: str, time_min: str, num_of_events: int = 2500) -> list:
-    """Returns list of events of specific calendar
+def fetch_games_from_calendar(calendar_id: str, fetch_after_this_time: str,
+                              num_of_events: Optional[int] = _DEFAULT_NUMBER_OF_EVENTS_TO_FETCH) -> List[Event]:
+    """
+    Returns list of events of specific calendar
 
     :param calendar_id: the calendar to extract events from
-    :type: str
-    :param time_min: from which date to start extract
-    :type: str
+    :param fetch_after_this_time: from which date to start extract
     :param num_of_events: amount of events to extract. optional
-    :type: int
     :return: A list of events
-    :rtype: list
     """
-
     service = get_calendar_service()
     # Call the Calendar API
-    print(f'Getting List of existing events:')
+    _logger.info(f'Getting List of existing events:')
     events_result = service.events().list(
         calendarId=calendar_id,
-        timeMin=time_min,
+        timeMin=fetch_after_this_time,
         singleEvents=True,
         maxResults=num_of_events,
         orderBy='startTime').execute()
@@ -55,9 +60,9 @@ def get_events_list(calendar_id: str, time_min: str, num_of_events: int = 2500) 
     events = events_result.get('items', [])
 
     if not events:
-        print('No upcoming events found')
+        _logger.info('No upcoming events found')
     else:
-        print(f'Found {len(events)} events:')
+        _logger.info(f'Found {len(events)} events:')
         # for event in events:
         # delete_event(event['id'], calendar_id)  # Deleting all events
 
@@ -66,8 +71,7 @@ def get_events_list(calendar_id: str, time_min: str, num_of_events: int = 2500) 
 
 if __name__ == '__main__':
     # get_calendars_list()
-    cal_id = 'uvtou62l55g03ql7jq9qr7hjt0@group.calendar.google.com'  # id of maccabi games calendar
+    calendar_id = 'uvtou62l55g03ql7jq9qr7hjt0@group.calendar.google.com'  # id of maccabi games calendar
     now = datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
     time = datetime(2011, 1, 1, 0, 0).isoformat() + 'Z'  # 'Z' indicates UTC time
-    get_events_list(cal_id, time)
-
+    fetch_games_from_calendar(calendar_id, time)

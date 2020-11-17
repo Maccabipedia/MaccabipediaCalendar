@@ -1,5 +1,10 @@
+import logging
+
 import googleapiclient
+
 from cal_setup import get_calendar_service
+
+_logger = logging.getLogger(__name__)
 
 
 def upload_event(event: dict, calendar_id: str) -> None:
@@ -7,11 +12,11 @@ def upload_event(event: dict, calendar_id: str) -> None:
 
     event_result = service.events().insert(calendarId=calendar_id, body=event).execute()
 
-    print("Created event:")
-    print("- id: ", event_result['id'])
-    print("- summary: ", event_result['summary'])
-    print("- starts at: ", event_result['start']['dateTime'])
-    print("- ends at: ", event_result['end']['dateTime'])
+    _logger.info("Created event:")
+    _logger.info("- id: ", event_result['id'])
+    _logger.info("- summary: ", event_result['summary'])
+    _logger.info("- starts at: ", event_result['start']['dateTime'])
+    _logger.info("- ends at: ", event_result['end']['dateTime'])
 
 
 def update_event(new_event: dict, event_id: str, calendar_id: str) -> None:
@@ -31,32 +36,29 @@ def update_event(new_event: dict, event_id: str, calendar_id: str) -> None:
         },
     ).execute()
 
-    print("Updated event:")
-    print("- id: ", event_result['id'])
-    print("- summary: ", event_result['summary'])
-    print("- starts at: ", event_result['start']['dateTime'])
-    print("- ends at: ", event_result['end']['dateTime'])
+    _logger.info("Updated event:")
+    _logger.info("- id: ", event_result['id'])
+    _logger.info("- summary: ", event_result['summary'])
+    _logger.info("- starts at: ", event_result['start']['dateTime'])
+    _logger.info("- ends at: ", event_result['end']['dateTime'])
 
 
 def delete_event(event_id: str, calendar_id: str) -> None:
-    """Deleting event from calendar
+    """
+    Deleting event from calendar
 
     :param event_id: id of the event to delete
-    :type event_id: str
     :param calendar_id: id of the calendar
-    :type calendar_id: str
     """
-
     service = get_calendar_service()
     try:
-        print(f'Deleting event with ID: {event_id}')
+        _logger.info(f'Deleting event with ID: {event_id}')
+
         service.events().delete(
             calendarId=calendar_id,
             eventId=event_id,
         ).execute()
+
+        _logger.info("Event deleted")
     except googleapiclient.errors.HttpError:
-        print("Failed to delete event")
-
-    print("Event deleted")
-
-
+        _logger.exception("Failed to delete event due to:")
