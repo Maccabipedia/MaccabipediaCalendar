@@ -33,11 +33,9 @@ We wanted to have a calender for for Maccabi games, but without manual updating.
 So we decided to scrap the data from the official site and automate the proccess as much as possible.
 
 ### Built With
-This section should list any major frameworks that you built your project using. Leave any add-ons/plugins for the acknowledgements section. Here are a few examples.
 * Python
 * [BeautifulSoup](https://www.crummy.com/software/BeautifulSoup/)
 * [googleapiclient](https://github.com/googleapis/google-api-python-client)
-
 
 
 <!-- GETTING STARTED -->
