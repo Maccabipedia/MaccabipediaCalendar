@@ -11,12 +11,13 @@ _logger = logging.getLogger(__name__)
 _DEFAULT_NUMBER_OF_EVENTS_TO_FETCH = 2500
 
 
-def get_calendars_list() -> list:
-    """Returns list of calendars
+def get_calendars_list() -> List[str]:
+    """
+    Returns list of calendars
 
     :return: A list of calendars
-    :rtype: list
     """
+
     service = get_calendar_service()
     # Call the Calendar API
     _logger.info('Getting list of calendars...')
@@ -47,6 +48,7 @@ def fetch_games_from_calendar(calendar_id: str, fetch_after_this_time: str,
     :param num_of_events: amount of events to extract. optional
     :return: A list of events
     """
+
     service = get_calendar_service()
     # Call the Calendar API
     _logger.info(f'Getting List of existing events:')

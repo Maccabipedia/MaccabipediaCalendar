@@ -69,7 +69,7 @@ def get_competition(x: str) -> str:
 
 def format_datetime(date_str: bs4.element.Tag, time: str) -> datetime:
     """
-    formatting date & time correctly
+    Formatting date & time correctly
 
     :param date_str: string of html, contains date
     :param time: contains time (format: XX:XX)
@@ -92,13 +92,13 @@ def format_datetime(date_str: bs4.element.Tag, time: str) -> datetime:
 
 
 def get_result(div: BeautifulSoup):
-    """parsing div to get the game's result
+    """
+    Parsing div to get the game's result
 
     :param div: string of html
-    :type div: class 'bs4.element.Tag'
     :return: string with the result if there is data, else returns empty string
-    :rtype: str
     """
+
     maccabi_score = div.find("span", {"class": "ss maccabi h"})
     rival_score = div.find("span", {"class": "ss h"})
     if not maccabi_score or not rival_score:
@@ -122,6 +122,7 @@ def handle_game(game: bs4.element.Tag) -> Event:
     :param game: html string - BeautifulSoup
     :return: event
     """
+
     official_game_page = game.find('a', href=True)['href']
     # Connect to the URL
     response = requests.get(official_game_page)
@@ -205,6 +206,7 @@ def parse_games_from_url(url: str, to_update_last_game: Optional[bool] = False) 
     :param to_update_last_game: Optional. A flag to indicate if to get only the last played game or all events
     :return: a list of events representing the games
     """
+
     # Connect to the URL
     response = requests.get(url)
 

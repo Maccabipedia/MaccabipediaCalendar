@@ -19,6 +19,7 @@ def event_already_exist(event: Dict, events_list: List) -> Dict:
     :param events_list: list of events to compare to
     :return: event or empty object
     """
+
     if events_list:
         for temp_event in events_list:
             if 'extendedProperties' in temp_event and 'extendedProperties' in event:
@@ -39,6 +40,7 @@ def add_update_events(events_list: List[Event], curr_events_list: List[Event], c
     :param curr_events_list: list of the current events
     :param calendar_id: id of calendar to add games to
     """
+
     for event in events_list:
         curr_event = event_already_exist(event, curr_events_list)
         if curr_event != {}:
@@ -49,7 +51,7 @@ def add_update_events(events_list: List[Event], curr_events_list: List[Event], c
             upload_event(event, calendar_id)
 
 
-def delete_unnecessary_events(events_list: List, curr_events_list: List, calendar_id: str) -> None:
+def delete_unnecessary_events(events_list: List[Event], curr_events_list: List[Event], calendar_id: str) -> None:
     """
     Deleting canceled/delayed/irrelevant events.
     Event which is in the calendar but not in the events list will be deleted
@@ -58,6 +60,7 @@ def delete_unnecessary_events(events_list: List, curr_events_list: List, calenda
     :param curr_events_list: list of the current events
     :param calendar_id: id of calendar to delete from
     """
+
     if curr_events_list:
         for event in curr_events_list:
             exist_event = event_already_exist(event, events_list)
@@ -73,6 +76,7 @@ def update_last_game(url: str, calendar_id: str) -> None:
     :param url: URL of the season game results
     :param calendar_id: id of calendar to update
     """
+
     last_game = parse_games_from_url(url, True)[0]
     last_event = fetch_games_from_calendar(calendar_id, last_game['start']['dateTime'] + '+02:00', 1)[0]
     if 'extendedProperties' in last_game and 'extendedProperties' in last_event:
@@ -81,13 +85,14 @@ def update_last_game(url: str, calendar_id: str) -> None:
                 update_event(last_game, last_event['id'], calendar_id)
 
 
-def add_history_games(seasons: List, calendar_id: str) -> None:
+def add_history_games(seasons: List[str], calendar_id: str) -> None:
     """
     Loop over all past seasons URLs and adding the games to the calendar
 
     :param seasons: list of URLs to seasons list of games
     :param calendar_id: id of calendar to update
     """
+
     for season in seasons:
         events = parse_games_from_url(season, False)
         for event in events:

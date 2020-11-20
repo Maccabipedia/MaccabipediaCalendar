@@ -7,7 +7,7 @@ from cal_setup import get_calendar_service
 _logger = logging.getLogger(__name__)
 
 
-def upload_event(event: dict, calendar_id: str) -> None:
+def upload_event(event: Dict, calendar_id: str) -> None:
     service = get_calendar_service()
 
     event_result = service.events().insert(calendarId=calendar_id, body=event).execute()
@@ -19,7 +19,7 @@ def upload_event(event: dict, calendar_id: str) -> None:
     _logger.info("- ends at: ", event_result['end']['dateTime'])
 
 
-def update_event(new_event: dict, event_id: str, calendar_id: str) -> None:
+def update_event(new_event: Dict, event_id: str, calendar_id: str) -> None:
     service = get_calendar_service()
 
     event_result = service.events().update(
