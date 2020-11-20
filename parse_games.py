@@ -1,13 +1,11 @@
 import json
 import logging
 import re
+import requests
+import bs4
 from datetime import datetime, timedelta
 from typing import List, Optional
-
-import bs4
-import requests
 from bs4 import BeautifulSoup
-
 from my_typing import Event
 
 _logger = logging.getLogger(__name__)
