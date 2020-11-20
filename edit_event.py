@@ -1,7 +1,6 @@
 import logging
-
 import googleapiclient
-
+from typing import Dict
 from cal_setup import get_calendar_service
 
 _logger = logging.getLogger(__name__)

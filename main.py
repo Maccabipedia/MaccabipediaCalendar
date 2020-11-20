@@ -1,7 +1,6 @@
 import logging
 from datetime import datetime
 from typing import Dict, List
-
 from edit_event import upload_event, update_event, delete_event
 from get_lists import fetch_games_from_calendar
 from parse_games import parse_games_from_url
