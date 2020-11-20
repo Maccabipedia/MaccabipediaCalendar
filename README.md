@@ -49,12 +49,6 @@ This section should list any major frameworks that you built your project using.
 
 * Python >= 3.8
 
-This is an example of how to list things you need to use the software and how to install them.
-* npm
-```sh
-npm install npm@latest -g
-```
-
 ### Installation
 
 1. Clone the repo
