@@ -1,7 +1,3 @@
-# credentials
-credentials.json
-token.pickle
-
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -159,3 +155,4 @@ dmypy.json
 
 # Ignore our credentials file
 credentials.json
+token.pickle

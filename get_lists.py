@@ -1,12 +1,12 @@
 import logging
+import os
+from dotenv import load_dotenv
 from datetime import datetime
 from typing import List, Optional
-
 from cal_setup import get_calendar_service
 from my_typing import Event
 
 _logger = logging.getLogger(__name__)
-
 
 _DEFAULT_NUMBER_OF_EVENTS_TO_FETCH = 2500
 
@@ -64,7 +64,7 @@ def fetch_games_from_calendar(calendar_id: str, fetch_after_this_time: str,
     if not events:
         _logger.info('No upcoming events found')
     else:
-        _logger.info(f'Found {len(events)} events:')
+        _logger.info(f'Found {len(events)} events')
         # for event in events:
         # delete_event(event['id'], calendar_id)  # Deleting all events
 
@@ -72,8 +72,8 @@ def fetch_games_from_calendar(calendar_id: str, fetch_after_this_time: str,
 
 
 if __name__ == '__main__':
-    # get_calendars_list()
-    maccabi_calendar_id = 'uvtou62l55g03ql7jq9qr7hjt0@group.calendar.google.com'  # id of maccabi games calendar
+    load_dotenv()
+    maccabi_calendar_id = os.getenv("CALENDAR_ID")
     now = datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
     time = datetime(2011, 1, 1, 0, 0).isoformat() + 'Z'  # 'Z' indicates UTC time
     fetch_games_from_calendar(maccabi_calendar_id, time)

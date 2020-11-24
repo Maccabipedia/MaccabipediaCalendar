@@ -1,4 +1,6 @@
 import logging
+import os
+from dotenv import load_dotenv
 from datetime import datetime
 from typing import Dict, List
 from edit_event import upload_event, update_event, delete_event
@@ -40,6 +42,7 @@ def add_update_events(events_list: List[Event], curr_events_list: List[Event], c
     :param calendar_id: id of calendar to add games to
     """
 
+    _logger.info("--- Adding & Updating Events: ---")
     for event in events_list:
         curr_event = event_already_exist(event, curr_events_list)
         if curr_event != {}:
@@ -59,7 +62,7 @@ def delete_unnecessary_events(events_list: List[Event], curr_events_list: List[E
     :param curr_events_list: list of the current events
     :param calendar_id: id of calendar to delete from
     """
-
+    _logger.info("--- Deleting Events: ---")
     if curr_events_list:
         for event in curr_events_list:
             exist_event = event_already_exist(event, events_list)
@@ -76,6 +79,7 @@ def update_last_game(url: str, calendar_id: str) -> None:
     :param calendar_id: id of calendar to update
     """
 
+    _logger.info("--- Updating Last Game: ---")
     last_game = parse_games_from_url(url, True)[0]
     last_event = fetch_games_from_calendar(calendar_id, last_game['start']['dateTime'] + '+02:00', 1)[0]
     if 'extendedProperties' in last_game and 'extendedProperties' in last_event:
@@ -91,7 +95,6 @@ def add_history_games(seasons: List[str], calendar_id: str) -> None:
     :param seasons: list of URLs to seasons list of games
     :param calendar_id: id of calendar to update
     """
-
     for season in seasons:
         events = parse_games_from_url(season, False)
         for event in events:
@@ -126,6 +129,6 @@ def main(calendar_id):
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
-    maccabipedia_games_calendar_id = 'uvtou62l55g03ql7jq9qr7hjt0@group.calendar.google.com'
-
+    load_dotenv()
+    maccabipedia_games_calendar_id = os.getenv("CALENDAR_ID")
     main(maccabipedia_games_calendar_id)

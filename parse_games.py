@@ -219,7 +219,7 @@ def parse_games_from_url(url: str, to_update_last_game: Optional[bool] = False) 
 
         for game in games:
             # Ignoring games without final schedule or U19 league
-            if game.find(text='מועד לא סופי') is None and game.find(text='נוער') is None:
+            if game.find(text='מועד לא סופי') is None and game.find(text='לנוער') is None:
                 event = handle_game(game)
                 events.append(event)
             else:

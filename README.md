@@ -51,7 +51,7 @@ So we decided to scrap the data from the official site and automate the proccess
 
 1. Clone the repo
 
-2. Create file .env, insert your calendar id and save it in repo directory:
+2. Create .env file, insert your calendar id and save it in repo directory:
 ```env
 calendar_id = 'your_calendar_id'
 ```
