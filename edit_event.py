@@ -12,10 +12,10 @@ def upload_event(event: Dict, calendar_id: str) -> None:
     event_result = service.events().insert(calendarId=calendar_id, body=event).execute()
 
     _logger.info("Created event:")
-    _logger.info("- id: ", event_result['id'])
-    _logger.info("- summary: ", event_result['summary'])
-    _logger.info("- starts at: ", event_result['start']['dateTime'])
-    _logger.info("- ends at: ", event_result['end']['dateTime'])
+    _logger.info(f"- id: {event_result['id']}")
+    _logger.info(f"- summary: {event_result['summary']}")
+    _logger.info(f"- starts at: {event_result['start']['dateTime']}")
+    _logger.info(f"- ends at: {event_result['end']['dateTime']}")
 
 
 def update_event(new_event: Dict, event_id: str, calendar_id: str) -> None:
@@ -36,10 +36,10 @@ def update_event(new_event: Dict, event_id: str, calendar_id: str) -> None:
     ).execute()
 
     _logger.info("Updated event:")
-    _logger.info("- id: ", event_result['id'])
-    _logger.info("- summary: ", event_result['summary'])
-    _logger.info("- starts at: ", event_result['start']['dateTime'])
-    _logger.info("- ends at: ", event_result['end']['dateTime'])
+    _logger.info(f"- id: {event_result['id']}")
+    _logger.info(f"- summary: {event_result['summary']}")
+    _logger.info(f"- starts at: {event_result['start']['dateTime']}")
+    _logger.info(f"- ends at: {event_result['end']['dateTime']}")
 
 
 def delete_event(event_id: str, calendar_id: str) -> None:
