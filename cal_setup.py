@@ -10,7 +10,7 @@ from google.auth.transport.requests import Request
 SCOPES = ['https://www.googleapis.com/auth/calendar']
 
 CREDENTIALS_FILE = 'google-credentials.json'
-SERVICE_ACCOUNT_FILE = 'service-user-credentials.json'
+SERVICE_ACCOUNT_FILE = 'google-credentials.json'
 
 
 def get_calendar_service() -> googleapiclient.discovery.Resource:
