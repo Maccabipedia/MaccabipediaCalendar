@@ -4,7 +4,6 @@ import os.path
 import googleapiclient
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
-from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 
 # If modifying these scopes, delete the file token.pickle.
@@ -36,8 +35,4 @@ def get_calendar_service() -> googleapiclient.discovery.Resource:
 
     service = googleapiclient.discovery.build('calendar', 'v3', credentials=creds, cache_discovery=False)
 
-    print(creds)
-    print('---------------')
-    print(service)
-    print('---------------')
     return service
