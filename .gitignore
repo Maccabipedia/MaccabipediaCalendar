@@ -154,5 +154,5 @@ dmypy.json
 .idea/
 
 # Ignore our credentials file
-google-credentials.json
+service-user-credentials.json
 token.pickle

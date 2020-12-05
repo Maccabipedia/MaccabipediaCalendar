@@ -2,6 +2,7 @@ import pickle
 import os.path
 
 import googleapiclient
+from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
@@ -10,10 +11,10 @@ from google.auth.transport.requests import Request
 SCOPES = ['https://www.googleapis.com/auth/calendar']
 
 CREDENTIALS_FILE = 'google-credentials.json'
+SERVICE_ACCOUNT_FILE = 'service-user-credentials.json'
 
 
 def get_calendar_service() -> googleapiclient.discovery.Resource:
-    creds = None
 
     # The file token.pickle stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first time
@@ -27,12 +28,16 @@ def get_calendar_service() -> googleapiclient.discovery.Resource:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
-            flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_FILE, SCOPES)
-            creds = flow.run_local_server(port=0)
+            creds = service_account.Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
 
         # Save the credentials for the next run
         with open('token.pickle', 'wb') as token:
             pickle.dump(creds, token)
 
-    service = build('calendar', 'v3', credentials=creds, cache_discovery=False)
+    service = googleapiclient.discovery.build('calendar', 'v3', credentials=creds, cache_discovery=False)
+
+    print(creds)
+    print('---------------')
+    print(service)
+    print('---------------')
     return service
