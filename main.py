@@ -56,8 +56,7 @@ def add_update_events(events_list: List[Event], curr_events_list: List[Event], c
         if curr_event != {}:
             if event['summary'] != curr_event['summary'] or event['description'] != curr_event['description'] \
                     or event['start'] != curr_event['start'] or event['location'] != curr_event['location']:
-                print('update')
-        #                update_event(event, curr_event['id'], calendar_id)
+                update_event(event, curr_event['id'], calendar_id)
         else:
             upload_event(event, calendar_id)
 
@@ -130,16 +129,9 @@ def main(calendar_id):
     # add_history_games(seasons, calendar_id)
 
     time = datetime.utcnow().isoformat() + 'Z'  # current datetime - to update and add upcoming games only
-    print('Curr Events')
     curr_events = fetch_games_from_calendar(calendar_id, time)
-
-    print('upcoming Events')
     upcoming_events = parse_games_from_url(upcoming_games, False)
-
-    print('Add Update')
     add_update_events(upcoming_events, curr_events, calendar_id)
-
-    print('Delete')
     delete_unnecessary_events(upcoming_events, curr_events, calendar_id)
     update_last_game(seasons[len(seasons) - 1], calendar_id)
 
@@ -149,4 +141,3 @@ if __name__ == '__main__':
     load_dotenv()
     maccabipedia_games_calendar_id = os.getenv("CALENDAR_ID")
     main(maccabipedia_games_calendar_id)
-    # delete_all_events(maccabipedia_games_calendar_id)

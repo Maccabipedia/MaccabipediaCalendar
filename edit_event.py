@@ -7,6 +7,13 @@ _logger = logging.getLogger(__name__)
 
 
 def upload_event(event: Dict, calendar_id: str) -> None:
+    """
+    Creating new event and uploading it to calendar
+
+    :param event: Event to upload
+    :param calendar_id: Calendar to upload to
+    """
+
     service = get_calendar_service()
 
     event_result = service.events().insert(calendarId=calendar_id, body=event).execute()
@@ -49,6 +56,7 @@ def delete_event(event_id: str, calendar_id: str) -> None:
     :param event_id: id of the event to delete
     :param calendar_id: id of the calendar
     """
+
     service = get_calendar_service()
     try:
         _logger.info(f'Deleting event with ID: {event_id}')

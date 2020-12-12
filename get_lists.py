@@ -65,8 +65,6 @@ def fetch_games_from_calendar(calendar_id: str, fetch_after_this_time: str,
         _logger.info('No upcoming events found')
     else:
         _logger.info(f'Found {len(events)} events')
-        # for event in events:
-        # delete_event(event['id'], calendar_id)  # Deleting all events
 
     return events
 
