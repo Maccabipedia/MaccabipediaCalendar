@@ -155,4 +155,6 @@ dmypy.json
 
 # Ignore our credentials file
 google-credentials.json
+credentials.json
+heroku-credentials.json
 token.pickle

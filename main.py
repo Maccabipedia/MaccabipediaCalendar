@@ -11,6 +11,14 @@ from my_typing import Event
 _logger = logging.getLogger(__name__)
 
 
+def delete_all_events(calendar_id: str) -> None:
+    _logger.info("--- Deleting All Events: ---")
+    events = fetch_games_from_calendar(calendar_id, '2011-10-10T10:10:10.644170Z')
+    for event in events:
+        _logger.info(f"Deleting event {event['summary']}")
+        delete_event(event['id'], calendar_id)
+
+
 def event_already_exist(event: Dict, events_list: List) -> Dict:
     """
     Checking if the parsed game is exists in the calendar by comparing links to game page in the official site.
@@ -48,7 +56,8 @@ def add_update_events(events_list: List[Event], curr_events_list: List[Event], c
         if curr_event != {}:
             if event['summary'] != curr_event['summary'] or event['description'] != curr_event['description'] \
                     or event['start'] != curr_event['start'] or event['location'] != curr_event['location']:
-                update_event(event, curr_event['id'], calendar_id)
+                print('update')
+        #                update_event(event, curr_event['id'], calendar_id)
         else:
             upload_event(event, calendar_id)
 
@@ -62,6 +71,7 @@ def delete_unnecessary_events(events_list: List[Event], curr_events_list: List[E
     :param curr_events_list: list of the current events
     :param calendar_id: id of calendar to delete from
     """
+
     _logger.info("--- Deleting Events: ---")
     if curr_events_list:
         for event in curr_events_list:
@@ -95,6 +105,7 @@ def add_history_games(seasons: List[str], calendar_id: str) -> None:
     :param seasons: list of URLs to seasons list of games
     :param calendar_id: id of calendar to update
     """
+
     for season in seasons:
         events = parse_games_from_url(season, False)
         for event in events:
@@ -119,11 +130,16 @@ def main(calendar_id):
     # add_history_games(seasons, calendar_id)
 
     time = datetime.utcnow().isoformat() + 'Z'  # current datetime - to update and add upcoming games only
+    print('Curr Events')
     curr_events = fetch_games_from_calendar(calendar_id, time)
 
+    print('upcoming Events')
     upcoming_events = parse_games_from_url(upcoming_games, False)
 
+    print('Add Update')
     add_update_events(upcoming_events, curr_events, calendar_id)
+
+    print('Delete')
     delete_unnecessary_events(upcoming_events, curr_events, calendar_id)
     update_last_game(seasons[len(seasons) - 1], calendar_id)
 
@@ -133,3 +149,4 @@ if __name__ == '__main__':
     load_dotenv()
     maccabipedia_games_calendar_id = os.getenv("CALENDAR_ID")
     main(maccabipedia_games_calendar_id)
+    # delete_all_events(maccabipedia_games_calendar_id)
