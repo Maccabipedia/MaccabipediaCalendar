@@ -1,5 +1,7 @@
 import logging
 import os
+
+import requests
 from dotenv import load_dotenv
 from datetime import datetime
 from typing import Dict, List
@@ -9,6 +11,8 @@ from parse_games import parse_games_from_url
 from my_typing import Event
 
 _logger = logging.getLogger(__name__)
+
+SEASON_LINK_UNFORMATTED = 'https://www.maccabi-tlv.co.il/%d7%9e%d7%a9%d7%97%d7%a7%d7%99%d7%9d-%d7%95%d7%aa%d7%95%d7%a6%d7%90%d7%95%d7%aa/%d7%94%d7%a7%d7%91%d7%95%d7%a6%d7%94-%d7%94%d7%91%d7%95%d7%92%d7%a8%d7%aa/%d7%aa%d7%95%d7%a6%d7%90%d7%95%d7%aa/?season={season_number}#content'
 
 
 def delete_all_events(calendar_id: str) -> None:
@@ -89,7 +93,7 @@ def update_last_game(url: str, calendar_id: str) -> None:
     """
 
     _logger.info("--- Updating Last Game: ---")
-    last_game = parse_games_from_url(url, True)[0]
+    last_game = parse_games_from_url(url, to_update_last_game=True)[0]
     last_event = fetch_games_from_calendar(calendar_id, last_game['start']['dateTime'] + '+02:00', 1)[0]
     if 'extendedProperties' in last_game and 'extendedProperties' in last_event:
         if last_game['extendedProperties']['shared']['url'] == last_event['extendedProperties']['shared']['url']:
@@ -106,31 +110,38 @@ def add_history_games(seasons: List[str], calendar_id: str) -> None:
     """
 
     for season in seasons:
-        events = parse_games_from_url(season, False)
+        events = parse_games_from_url(season, to_update_last_game=False)
         for event in events:
             upload_event(event, calendar_id)
 
 
-def main(calendar_id):
-    season_12_13 = 'https://www.maccabi-tlv.co.il/%d7%9e%d7%a9%d7%97%d7%a7%d7%99%d7%9d-%d7%95%d7%aa%d7%95%d7%a6%d7%90%d7%95%d7%aa/%d7%94%d7%a7%d7%91%d7%95%d7%a6%d7%94-%d7%94%d7%91%d7%95%d7%92%d7%a8%d7%aa/%d7%aa%d7%95%d7%a6%d7%90%d7%95%d7%aa/?season=2#content'
-    season_13_14 = 'https://www.maccabi-tlv.co.il/%d7%9e%d7%a9%d7%97%d7%a7%d7%99%d7%9d-%d7%95%d7%aa%d7%95%d7%a6%d7%90%d7%95%d7%aa/%d7%94%d7%a7%d7%91%d7%95%d7%a6%d7%94-%d7%94%d7%91%d7%95%d7%92%d7%a8%d7%aa/%d7%aa%d7%95%d7%a6%d7%90%d7%95%d7%aa/?season=74#content'
-    season_14_15 = 'https://www.maccabi-tlv.co.il/%d7%9e%d7%a9%d7%97%d7%a7%d7%99%d7%9d-%d7%95%d7%aa%d7%95%d7%a6%d7%90%d7%95%d7%aa/%d7%94%d7%a7%d7%91%d7%95%d7%a6%d7%94-%d7%94%d7%91%d7%95%d7%92%d7%a8%d7%aa/%d7%aa%d7%95%d7%a6%d7%90%d7%95%d7%aa/?season=75#content'
-    season_15_16 = 'https://www.maccabi-tlv.co.il/%d7%9e%d7%a9%d7%97%d7%a7%d7%99%d7%9d-%d7%95%d7%aa%d7%95%d7%a6%d7%90%d7%95%d7%aa/%d7%94%d7%a7%d7%91%d7%95%d7%a6%d7%94-%d7%94%d7%91%d7%95%d7%92%d7%a8%d7%aa/%d7%aa%d7%95%d7%a6%d7%90%d7%95%d7%aa/?season=76#content'
-    season_16_17 = 'https://www.maccabi-tlv.co.il/%d7%9e%d7%a9%d7%97%d7%a7%d7%99%d7%9d-%d7%95%d7%aa%d7%95%d7%a6%d7%90%d7%95%d7%aa/%d7%94%d7%a7%d7%91%d7%95%d7%a6%d7%94-%d7%94%d7%91%d7%95%d7%92%d7%a8%d7%aa/%d7%aa%d7%95%d7%a6%d7%90%d7%95%d7%aa/?season=77#content'
-    season_17_18 = 'https://www.maccabi-tlv.co.il/%d7%9e%d7%a9%d7%97%d7%a7%d7%99%d7%9d-%d7%95%d7%aa%d7%95%d7%a6%d7%90%d7%95%d7%aa/%d7%94%d7%a7%d7%91%d7%95%d7%a6%d7%94-%d7%94%d7%91%d7%95%d7%92%d7%a8%d7%aa/%d7%aa%d7%95%d7%a6%d7%90%d7%95%d7%aa/?season=78#content'
-    season_18_19 = 'https://www.maccabi-tlv.co.il/%d7%9e%d7%a9%d7%97%d7%a7%d7%99%d7%9d-%d7%95%d7%aa%d7%95%d7%a6%d7%90%d7%95%d7%aa/%d7%94%d7%a7%d7%91%d7%95%d7%a6%d7%94-%d7%94%d7%91%d7%95%d7%92%d7%a8%d7%aa/%d7%aa%d7%95%d7%a6%d7%90%d7%95%d7%aa/?season=79#content'
-    season_19_20 = 'https://www.maccabi-tlv.co.il/%d7%9e%d7%a9%d7%97%d7%a7%d7%99%d7%9d-%d7%95%d7%aa%d7%95%d7%a6%d7%90%d7%95%d7%aa/%d7%94%d7%a7%d7%91%d7%95%d7%a6%d7%94-%d7%94%d7%91%d7%95%d7%92%d7%a8%d7%aa/%d7%aa%d7%95%d7%a6%d7%90%d7%95%d7%aa/?season=80#content'
-    season_20_21 = 'https://www.maccabi-tlv.co.il/%d7%9e%d7%a9%d7%97%d7%a7%d7%99%d7%9d-%d7%95%d7%aa%d7%95%d7%a6%d7%90%d7%95%d7%aa/%d7%94%d7%a7%d7%91%d7%95%d7%a6%d7%94-%d7%94%d7%91%d7%95%d7%92%d7%a8%d7%aa/%d7%aa%d7%95%d7%a6%d7%90%d7%95%d7%aa/?season=81#content'
-    upcoming_games = 'https://www.maccabi-tlv.co.il/%d7%9e%d7%a9%d7%97%d7%a7%d7%99%d7%9d-%d7%95%d7%aa%d7%95%d7%a6%d7%90%d7%95%d7%aa/%d7%94%d7%a7%d7%91%d7%95%d7%a6%d7%94-%d7%94%d7%91%d7%95%d7%92%d7%a8%d7%aa/%d7%9c%d7%95%d7%97-%d7%9e%d7%a9%d7%97%d7%a7%d7%99%d7%9d/'
+def build_seasons_links() -> List[str]:
+    seasons_links = []
 
-    seasons = [season_12_13, season_13_14, season_14_15, season_15_16, season_16_17, season_17_18, season_18_19,
-               season_19_20, season_20_21]
+    _logger.info("Building season links")
+
+    current_season_number = 74  # 2013/14
+    while "המשחק האחרון" in requests.get(SEASON_LINK_UNFORMATTED.format(season_number=current_season_number)).text:
+        seasons_links.append(SEASON_LINK_UNFORMATTED.format(season_number=current_season_number))
+        _logger.info(f"Added new season: {current_season_number - 62}/{str(current_season_number - 61)[-2:]}")
+
+        current_season_number += 1
+
+    _logger.info(f"Finished to build season links, total seasons: {len(seasons_links)}")
+    return seasons_links
+
+
+def main():
+    calendar_id = os.getenv("CALENDAR_ID")
+
+    seasons = build_seasons_links()
+    upcoming_games_link = 'https://www.maccabi-tlv.co.il/%d7%9e%d7%a9%d7%97%d7%a7%d7%99%d7%9d-%d7%95%d7%aa%d7%95%d7%a6%d7%90%d7%95%d7%aa/%d7%94%d7%a7%d7%91%d7%95%d7%a6%d7%94-%d7%94%d7%91%d7%95%d7%92%d7%a8%d7%aa/%d7%9c%d7%95%d7%97-%d7%9e%d7%a9%d7%97%d7%a7%d7%99%d7%9d/'
 
     # add_history_games(seasons, calendar_id)
 
     time = datetime.utcnow().isoformat() + 'Z'  # current datetime - to update and add upcoming games only
     curr_events = fetch_games_from_calendar(calendar_id, time)
-    upcoming_events = parse_games_from_url(upcoming_games, False)
+    upcoming_events = parse_games_from_url(upcoming_games_link, to_update_last_game=False)
     add_update_events(upcoming_events, curr_events, calendar_id)
     delete_unnecessary_events(upcoming_events, curr_events, calendar_id)
     update_last_game(seasons[len(seasons) - 1], calendar_id)
@@ -138,6 +149,11 @@ def main(calendar_id):
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
-    load_dotenv()
-    maccabipedia_games_calendar_id = os.getenv("CALENDAR_ID")
-    main(maccabipedia_games_calendar_id)
+
+    # noinspection PyBroadException
+    try:
+        load_dotenv()
+
+        main()
+    except Exception:
+        logging.exception(f"Unhandled exception: ")

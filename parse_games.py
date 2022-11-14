@@ -159,7 +159,7 @@ def handle_game(game: bs4.element.Tag) -> Event:
 
     # Get link to game page at maccabipedia
     response = requests.get(
-        f"https://www.maccabipedia.co.il/index.php?title=Special:CargoExport&format=json&tables=Games_Catalog&fields=_pageName&where=Games_Catalog.Date='{game_date.date()}'")
+        f"https://www.maccabipedia.co.il/index.php?title=Special:CargoExport&format=json&tables=Football_Games&fields=_pageName&where=Football_Games.Date='{game_date.date()}'")
     page_name = json.loads(response.text)
     if page_name and '_pageName' in page_name[0]:
         page_name = page_name[0]['_pageName']
@@ -235,4 +235,4 @@ def parse_games_from_url(url: str, to_update_last_game: Optional[bool] = False) 
 
 if __name__ == '__main__':
     upcoming_games = 'https://www.maccabi-tlv.co.il/%d7%9e%d7%a9%d7%97%d7%a7%d7%99%d7%9d-%d7%95%d7%aa%d7%95%d7%a6%d7%90%d7%95%d7%aa/%d7%94%d7%a7%d7%91%d7%95%d7%a6%d7%94-%d7%94%d7%91%d7%95%d7%92%d7%a8%d7%aa/%d7%9c%d7%95%d7%97-%d7%9e%d7%a9%d7%97%d7%a7%d7%99%d7%9d/'
-    parse_games_from_url(upcoming_games, False)
+    parse_games_from_url(upcoming_games, to_update_last_game=False)

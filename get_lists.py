@@ -50,8 +50,9 @@ def fetch_games_from_calendar(calendar_id: str, fetch_after_this_time: str,
     """
 
     service = get_calendar_service()
-    # Call the Calendar API
-    _logger.info(f'Getting List of existing events:')
+
+    _logger.info(f'Getting all of the event starting from time: {fetch_after_this_time}')
+
     events_result = service.events().list(
         calendarId=calendar_id,
         timeMin=fetch_after_this_time,
