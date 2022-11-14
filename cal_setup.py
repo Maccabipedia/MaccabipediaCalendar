@@ -1,5 +1,8 @@
+import json
+import logging
 import pickle
 import os.path
+from pathlib import Path
 
 import googleapiclient
 from googleapiclient.discovery import build
@@ -11,6 +14,9 @@ from dotenv import load_dotenv
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ['https://www.googleapis.com/auth/calendar']
 SERVICE_ACCOUNT_FILE = 'google-credentials.json'
+
+_logger = logging.getLogger(__name__)
+_CURRENT_FOLDER = Path(__file__).parent.absolute()
 
 
 def get_calendar_service() -> googleapiclient.discovery.Resource:
@@ -28,6 +34,9 @@ def get_calendar_service() -> googleapiclient.discovery.Resource:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
+            _logger.info(f'Dumping google credentials json to: {SERVICE_ACCOUNT_FILE}')
+            (_CURRENT_FOLDER / SERVICE_ACCOUNT_FILE).write_text(json.dumps(os.environ['GOOGLE_CREDENTIALS']))
+            
             creds = service_account.Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
 
         # Save the credentials for the next run
