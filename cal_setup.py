@@ -1,15 +1,14 @@
-import json
 import logging
-import pickle
 import os.path
+import pickle
 from pathlib import Path
 
 import googleapiclient
-from googleapiclient.discovery import build
 import googleapiclient.discovery
+from dotenv import load_dotenv
 from google.auth.transport.requests import Request
 from google.oauth2 import service_account
-from dotenv import load_dotenv
+from googleapiclient.discovery import build
 
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ['https://www.googleapis.com/auth/calendar']
@@ -34,8 +33,9 @@ def get_calendar_service() -> googleapiclient.discovery.Resource:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
-            _logger.info(f'Dumping google credentials json to: {SERVICE_ACCOUNT_FILE}')
-            (_CURRENT_FOLDER / SERVICE_ACCOUNT_FILE).write_text(os.environ['GOOGLE_CREDENTIALS'])
+            if not (_CURRENT_FOLDER / SERVICE_ACCOUNT_FILE).exists():
+                _logger.info(f'Dumping google credentials json to: {SERVICE_ACCOUNT_FILE}')
+                (_CURRENT_FOLDER / SERVICE_ACCOUNT_FILE).write_text(os.environ['GOOGLE_CREDENTIALS'])
 
             creds = service_account.Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
 
@@ -68,6 +68,6 @@ def list_service_accounts(project_id):
 
 if __name__ == '__main__':
     load_dotenv()
-    calendar_project_name= os.getenv("PROJECT_NAME")
+    calendar_project_name = os.getenv("PROJECT_NAME")
     list_service_accounts(calendar_project_name)
     print(get_calendar_service())
