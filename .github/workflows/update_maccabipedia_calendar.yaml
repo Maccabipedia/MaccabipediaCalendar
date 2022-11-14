@@ -22,7 +22,6 @@ jobs:
         with:
           name: "google-credentials.json"
           json: ${{ secrets.GOOGLE_CREDENTIALS }}
-          dir: './'
       - name: Update MaccabiPedia Calendar
         env:
           CALENDAR_ID: ${{ secrets.CALENDAR_ID }}
