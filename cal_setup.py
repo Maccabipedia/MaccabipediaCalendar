@@ -35,8 +35,8 @@ def get_calendar_service() -> googleapiclient.discovery.Resource:
             creds.refresh(Request())
         else:
             _logger.info(f'Dumping google credentials json to: {SERVICE_ACCOUNT_FILE}')
-            (_CURRENT_FOLDER / SERVICE_ACCOUNT_FILE).write_text(json.dumps(os.environ['GOOGLE_CREDENTIALS']))
-            
+            (_CURRENT_FOLDER / SERVICE_ACCOUNT_FILE).write_text(os.environ['GOOGLE_CREDENTIALS'])
+
             creds = service_account.Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
 
         # Save the credentials for the next run
