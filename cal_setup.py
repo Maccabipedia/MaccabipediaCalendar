@@ -8,7 +8,6 @@ import googleapiclient.discovery
 from dotenv import load_dotenv
 from google.auth.transport.requests import Request
 from google.oauth2 import service_account
-from googleapiclient.discovery import build
 
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ['https://www.googleapis.com/auth/calendar']
@@ -36,6 +35,8 @@ def get_calendar_service() -> googleapiclient.discovery.Resource:
             if not (_CURRENT_FOLDER / SERVICE_ACCOUNT_FILE).exists():
                 _logger.info(f'Dumping google credentials json to: {SERVICE_ACCOUNT_FILE}')
                 (_CURRENT_FOLDER / SERVICE_ACCOUNT_FILE).write_text(os.environ['GOOGLE_CREDENTIALS'])
+
+            _logger.info(f"Json content: {(_CURRENT_FOLDER / SERVICE_ACCOUNT_FILE).read_text()}")
 
             creds = service_account.Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
 
