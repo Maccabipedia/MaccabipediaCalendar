@@ -20,7 +20,7 @@ jobs:
         id: create-json
         uses: jsdaniell/create-json@v1.2.1
         with:
-          name: "google-credentials.json"
+          name: "./google-credentials.json"
           json: ${{ secrets.GOOGLE_CREDENTIALS }}
       - name: Update MaccabiPedia Calendar
         env:
