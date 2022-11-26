@@ -153,7 +153,7 @@ if __name__ == '__main__':
     # noinspection PyBroadException
     try:
         load_dotenv()
-        logging.info(f"Try cred: {os.environ['GOOGLE_APPLICATION_CREDENTIALS']}")
+        logging.info(f"Try cred: {os.environ}")
 
         main()
     except Exception:
