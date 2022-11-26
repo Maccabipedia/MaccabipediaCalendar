@@ -25,6 +25,7 @@ def get_calendar_service() -> googleapiclient.discovery.Resource:
         with open('token.pickle', 'rb') as token:
             creds = pickle.load(token)
     else:
+        _logger.info(f'No pickle available')
         creds = None
 
     # If there are no (valid) credentials available, let the user log in.
@@ -32,6 +33,8 @@ def get_calendar_service() -> googleapiclient.discovery.Resource:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
+            _logger.info(f'No creds available')
+
             if not (_CURRENT_FOLDER / SERVICE_ACCOUNT_FILE).exists():
                 _logger.info(f'Dumping google credentials json to: {SERVICE_ACCOUNT_FILE}')
                 (_CURRENT_FOLDER / SERVICE_ACCOUNT_FILE).write_text(os.environ['GOOGLE_CREDENTIALS'])
