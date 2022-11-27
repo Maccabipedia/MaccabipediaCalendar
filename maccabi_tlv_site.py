@@ -1,12 +1,14 @@
 import json
 import logging
 import re
-import requests
-import bs4
 from datetime import datetime, timedelta
 from typing import List, Optional
+
+import bs4
+import requests
 from bs4 import BeautifulSoup
-from my_typing import Event
+
+from calendar_operations import Event
 
 _logger = logging.getLogger(__name__)
 
@@ -196,7 +198,7 @@ def handle_game(game: bs4.element.Tag) -> Event:
     return event
 
 
-def parse_games_from_url(url: str, to_update_last_game: Optional[bool] = False) -> List[Event]:
+def fetch_games_from_maccabi_tlv_site(url: str, to_update_last_game: Optional[bool] = False) -> List[Event]:
     """
     Gets games from the official site, parse them and return as list of events
 
@@ -235,4 +237,4 @@ def parse_games_from_url(url: str, to_update_last_game: Optional[bool] = False) 
 
 if __name__ == '__main__':
     upcoming_games = 'https://www.maccabi-tlv.co.il/%d7%9e%d7%a9%d7%97%d7%a7%d7%99%d7%9d-%d7%95%d7%aa%d7%95%d7%a6%d7%90%d7%95%d7%aa/%d7%94%d7%a7%d7%91%d7%95%d7%a6%d7%94-%d7%94%d7%91%d7%95%d7%92%d7%a8%d7%aa/%d7%9c%d7%95%d7%97-%d7%9e%d7%a9%d7%97%d7%a7%d7%99%d7%9d/'
-    parse_games_from_url(upcoming_games, to_update_last_game=False)
+    fetch_games_from_maccabi_tlv_site(upcoming_games, to_update_last_game=False)

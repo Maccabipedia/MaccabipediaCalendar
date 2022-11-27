@@ -19,6 +19,5 @@ jobs:
       - name: Update MaccabiPedia Calendar
         env:
           CALENDAR_ID: ${{ secrets.CALENDAR_ID }}
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
           GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
         run: python main.py

@@ -1,18 +1,19 @@
 import logging
 import os
+from datetime import datetime
+from typing import Dict, List
 
 import requests
 from dotenv import load_dotenv
-from datetime import datetime
-from typing import Dict, List
-from edit_event import upload_event, update_event, delete_event
-from get_lists import fetch_games_from_calendar
-from parse_games import parse_games_from_url
-from my_typing import Event
+
+from calendar_operations import fetch_games_from_calendar, update_event, upload_event, delete_event, Event
+from google_calendar_api import initialize_global_google_service_account_from_memory_json
+from maccabi_tlv_site import fetch_games_from_maccabi_tlv_site
 
 _logger = logging.getLogger(__name__)
 
 SEASON_LINK_UNFORMATTED = 'https://www.maccabi-tlv.co.il/%d7%9e%d7%a9%d7%97%d7%a7%d7%99%d7%9d-%d7%95%d7%aa%d7%95%d7%a6%d7%90%d7%95%d7%aa/%d7%94%d7%a7%d7%91%d7%95%d7%a6%d7%94-%d7%94%d7%91%d7%95%d7%92%d7%a8%d7%aa/%d7%aa%d7%95%d7%a6%d7%90%d7%95%d7%aa/?season={season_number}#content'
+UPCOMING_GAMES_LINK = 'https://www.maccabi-tlv.co.il/%d7%9e%d7%a9%d7%97%d7%a7%d7%99%d7%9d-%d7%95%d7%aa%d7%95%d7%a6%d7%90%d7%95%d7%aa/%d7%94%d7%a7%d7%91%d7%95%d7%a6%d7%94-%d7%94%d7%91%d7%95%d7%92%d7%a8%d7%aa/%d7%9c%d7%95%d7%97-%d7%9e%d7%a9%d7%97%d7%a7%d7%99%d7%9d/'
 
 
 def delete_all_events(calendar_id: str) -> None:
@@ -23,7 +24,7 @@ def delete_all_events(calendar_id: str) -> None:
         delete_event(event['id'], calendar_id)
 
 
-def event_already_exist(event: Dict, events_list: List) -> Dict:
+def search_event_in_calendar(event: Dict, events_list: List) -> Dict:
     """
     Checking if the parsed game is exists in the calendar by comparing links to game page in the official site.
     If it is, return the existing event, else return empty
@@ -45,18 +46,11 @@ def event_already_exist(event: Dict, events_list: List) -> Dict:
     return {}
 
 
-def add_update_events(events_list: List[Event], curr_events_list: List[Event], calendar_id: str) -> None:
-    """
-    Updating & adding upcoming games
-
-    :param events_list: list of the most updated events
-    :param curr_events_list: list of the current events
-    :param calendar_id: id of calendar to add games to
-    """
-
+def sync_future_games_to_calendar(events_list: List[Event], curr_events_list: List[Event], calendar_id: str) -> None:
     _logger.info("--- Adding & Updating Events: ---")
+
     for event in events_list:
-        curr_event = event_already_exist(event, curr_events_list)
+        curr_event = search_event_in_calendar(event, curr_events_list)
         if curr_event != {}:
             if event['summary'] != curr_event['summary'] or event['description'] != curr_event['description'] \
                     or event['start'] != curr_event['start'] or event['location'] != curr_event['location']:
@@ -65,36 +59,30 @@ def add_update_events(events_list: List[Event], curr_events_list: List[Event], c
             upload_event(event, calendar_id)
 
 
-def delete_unnecessary_events(events_list: List[Event], curr_events_list: List[Event], calendar_id: str) -> None:
+def delete_unnecessary_events(events_list: List[Event], future_calendars_events: List[Event], calendar_id: str) -> None:
     """
     Deleting canceled/delayed/irrelevant events.
     Event which is in the calendar but not in the events list will be deleted
-
-    :param events_list: list of the most updated events
-    :param curr_events_list: list of the current events
-    :param calendar_id: id of calendar to delete from
     """
-
     _logger.info("--- Deleting Events: ---")
-    if curr_events_list:
-        for event in curr_events_list:
-            exist_event = event_already_exist(event, events_list)
-            if exist_event == {}:
-                _logger.info(f"Deleting event {event['summary']}")
-                delete_event(event['id'], calendar_id)
+
+    for event in future_calendars_events:
+        exist_event = search_event_in_calendar(event, events_list)
+
+        if exist_event == {}:
+            _logger.info(f"Deleting event {event['summary']}")
+            delete_event(event['id'], calendar_id)
 
 
 def update_last_game(url: str, calendar_id: str) -> None:
     """
     Updating the last game result & adding link to game page at maccabipedia
-
-    :param url: URL of the season game results
-    :param calendar_id: id of calendar to update
     """
 
     _logger.info("--- Updating Last Game: ---")
-    last_game = parse_games_from_url(url, to_update_last_game=True)[0]
+    last_game = fetch_games_from_maccabi_tlv_site(url, to_update_last_game=True)[0]
     last_event = fetch_games_from_calendar(calendar_id, last_game['start']['dateTime'] + '+02:00', 1)[0]
+
     if 'extendedProperties' in last_game and 'extendedProperties' in last_event:
         if last_game['extendedProperties']['shared']['url'] == last_event['extendedProperties']['shared']['url']:
             if last_event['extendedProperties']['shared']['result'] == '':
@@ -104,18 +92,15 @@ def update_last_game(url: str, calendar_id: str) -> None:
 def add_history_games(seasons: List[str], calendar_id: str) -> None:
     """
     Loop over all past seasons URLs and adding the games to the calendar
-
-    :param seasons: list of URLs to seasons list of games
-    :param calendar_id: id of calendar to update
     """
 
     for season in seasons:
-        events = parse_games_from_url(season, to_update_last_game=False)
+        events = fetch_games_from_maccabi_tlv_site(season, to_update_last_game=False)
         for event in events:
             upload_event(event, calendar_id)
 
 
-def build_seasons_links() -> List[str]:
+def build_maccabi_tlv_site_seasons_links() -> List[str]:
     seasons_links = []
 
     _logger.info("Building season links")
@@ -131,30 +116,38 @@ def build_seasons_links() -> List[str]:
     return seasons_links
 
 
-def main():
-    calendar_id = os.getenv("CALENDAR_ID")
+def main(google_credentials: str, calendar_id: str):
+    current_time = datetime.utcnow().isoformat() + 'Z'  # current datetime - to update and add upcoming games only
 
-    seasons = build_seasons_links()
-    upcoming_games_link = 'https://www.maccabi-tlv.co.il/%d7%9e%d7%a9%d7%97%d7%a7%d7%99%d7%9d-%d7%95%d7%aa%d7%95%d7%a6%d7%90%d7%95%d7%aa/%d7%94%d7%a7%d7%91%d7%95%d7%a6%d7%94-%d7%94%d7%91%d7%95%d7%92%d7%a8%d7%aa/%d7%9c%d7%95%d7%97-%d7%9e%d7%a9%d7%97%d7%a7%d7%99%d7%9d/'
+    initialize_global_google_service_account_from_memory_json(google_credentials)
+    seasons = build_maccabi_tlv_site_seasons_links()
 
+    future_calendars_events = fetch_games_from_calendar(calendar_id, fetch_after_this_time=current_time)
+    upcoming_games_from_maccabi_tlv_site = fetch_games_from_maccabi_tlv_site(UPCOMING_GAMES_LINK,
+                                                                             to_update_last_game=False)
+    sync_future_games_to_calendar(upcoming_games_from_maccabi_tlv_site, future_calendars_events, calendar_id)
+    delete_unnecessary_events(upcoming_games_from_maccabi_tlv_site, future_calendars_events, calendar_id)
+    update_last_game(seasons[len(seasons) - 1], calendar_id)
+
+    # Uncomment this in case you need to old games
     # add_history_games(seasons, calendar_id)
 
-    time = datetime.utcnow().isoformat() + 'Z'  # current datetime - to update and add upcoming games only
-    curr_events = fetch_games_from_calendar(calendar_id, time)
-    upcoming_events = parse_games_from_url(upcoming_games_link, to_update_last_game=False)
-    add_update_events(upcoming_events, curr_events, calendar_id)
-    delete_unnecessary_events(upcoming_events, curr_events, calendar_id)
-    update_last_game(seasons[len(seasons) - 1], calendar_id)
+
+def entry_point() -> None:
+    # noinspection PyBroadException
+    try:
+        logging.info("Starting!")
+        load_dotenv()
+
+        google_credentials = os.environ['GOOGLE_CREDENTIALS']
+        calendar_id = os.environ['CALENDAR_ID']
+
+        main(google_credentials, calendar_id)
+    except Exception:
+        logging.exception(f"Unhandled exception (exiting the program): ")
+        exit(1)
 
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
-
-    # noinspection PyBroadException
-    try:
-        load_dotenv()
-        logging.info(f"Try cred: {os.environ}")
-
-        main()
-    except Exception:
-        logging.exception(f"Unhandled exception: ")
+    entry_point()

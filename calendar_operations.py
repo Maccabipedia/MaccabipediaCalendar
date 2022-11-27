@@ -1,9 +1,38 @@
 import logging
+from typing import Any, Dict, List, Optional
+
 import googleapiclient
-from typing import Dict
-from cal_setup import get_calendar_service
+
+from google_calendar_api import get_global_google_service_account
 
 _logger = logging.getLogger(__name__)
+
+_DEFAULT_NUMBER_OF_EVENTS_TO_FETCH = 2500
+
+Event = Dict[str, Any]
+
+
+def fetch_games_from_calendar(calendar_id: str, fetch_after_this_time: str,
+                              max_events_to_fetch: Optional[int] = _DEFAULT_NUMBER_OF_EVENTS_TO_FETCH) -> List[Event]:
+    google_service_account = get_global_google_service_account()
+
+    _logger.info(f'Getting all of the event starting from time: {fetch_after_this_time}')
+
+    events_result = google_service_account.events().list(
+        calendarId=calendar_id,
+        timeMin=fetch_after_this_time,
+        singleEvents=True,
+        maxResults=max_events_to_fetch,
+        orderBy='startTime').execute()
+
+    events = events_result.get('items', [])
+
+    if not events:
+        _logger.info('No upcoming events found')
+    else:
+        _logger.info(f'Found {len(events)} upcoming events')
+
+    return events
 
 
 def upload_event(event: Dict, calendar_id: str) -> None:
@@ -14,9 +43,9 @@ def upload_event(event: Dict, calendar_id: str) -> None:
     :param calendar_id: Calendar to upload to
     """
 
-    service = get_calendar_service()
+    google_service_account = get_global_google_service_account()
 
-    event_result = service.events().insert(calendarId=calendar_id, body=event).execute()
+    event_result = google_service_account.events().insert(calendarId=calendar_id, body=event).execute()
 
     _logger.info("Created event:")
     _logger.info(f"- id: {event_result['id']}")
@@ -26,9 +55,9 @@ def upload_event(event: Dict, calendar_id: str) -> None:
 
 
 def update_event(new_event: Dict, event_id: str, calendar_id: str) -> None:
-    service = get_calendar_service()
+    google_service_account = get_global_google_service_account()
 
-    event_result = service.events().update(
+    event_result = google_service_account.events().update(
         calendarId=calendar_id,
         eventId=event_id,
         body={
@@ -56,12 +85,12 @@ def delete_event(event_id: str, calendar_id: str) -> None:
     :param event_id: id of the event to delete
     :param calendar_id: id of the calendar
     """
+    google_service_account = get_global_google_service_account()
 
-    service = get_calendar_service()
     try:
         _logger.info(f'Deleting event with ID: {event_id}')
 
-        service.events().delete(
+        google_service_account.events().delete(
             calendarId=calendar_id,
             eventId=event_id,
         ).execute()
