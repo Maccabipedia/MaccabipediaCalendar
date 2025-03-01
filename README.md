@@ -30,7 +30,7 @@ Maccabipedia's Calendar is a small python program to scrap data about games sche
 ## About The Project
 
 We wanted to have a calender for for Maccabi games, but without manual updating.
-So we decided to scrap the data from the official site and automate the proccess as much as possible.
+So we decided to scrap the data from the official site and automate the process as much as possible.
 
 ### Built With
 * Python
@@ -45,7 +45,7 @@ So we decided to scrap the data from the official site and automate the proccess
 
 ### Prerequisites
 
-* Python >= 3.8
+* Python >= 3.13
 
 ### Installation
 
@@ -60,9 +60,13 @@ calendar_id = 'your_calendar_id'
 
 4. Download the credentials & save them as 'credentials.json'
 
-5. Install Python packages
-```python
-pip install 
+5. Install Python packages in virtual environment:
+
+```bash
+sudo apt install python-virtualenv # In case it's not installed
+python -m venv .venv
+source ./.venv/bin/activate
+pip install -r requirements.txt
 ```
 
 6. run main.py

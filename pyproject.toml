@@ -1,0 +1,34 @@
+[project]
+name = "MaccabipediaCalender"
+version = "1.0.0"
+description = "Maintain calenders for Maccabi games"
+requires-python = ">=3.13"
+
+[tool.ruff]
+line-length = 100
+lint.select = ["F", "E", "W", "PL", "RUF", "I", "PIE"]
+lint.ignore = [
+    "E501",
+    "PLR0913",
+    "PLR2004",
+    "PLR0912",
+    "PLW2901",
+    "PLR0915",
+    "RUF012",
+]
+
+[tool.pyright]
+include = ["**/MaccabipediaCalendar"]
+exclude = ["**/__pycache__", "tests", "**/node_modules"]
+
+typeCheckingMode = "standard"
+
+reportUnusedVariable = "error"
+reportMissingImports = "error"
+reportMatchNotExhaustive = "warning"
+reportImplicitStringConcatenation = "warning"
+reportPrivateUsage = "warning"
+reportUnnecessaryContains = "warning"
+reportUnnecessaryTypeIgnoreComment = "warning"
+reportUnusedFunction = "none"
+reportMissingTypeStubs = "none"
