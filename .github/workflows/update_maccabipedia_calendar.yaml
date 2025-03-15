@@ -1,7 +1,7 @@
 name: Update MaccabiPedia Calendar
 on:
   schedule:
-    - cron: "0 20 * * *"
+    - cron: "5 21 * * *"
   workflow_dispatch:
 
 jobs:

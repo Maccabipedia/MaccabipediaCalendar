@@ -1,8 +1,9 @@
 # Logging configuration
 
 import logging
-import os
 import sys
+
+from config.settings import settings
 
 
 def setup_logging(file_name: str = "MaccabipediaCalendar") -> logging.Logger:
@@ -11,15 +12,8 @@ def setup_logging(file_name: str = "MaccabipediaCalendar") -> logging.Logger:
 
     if not logger.handlers:
         handler = logging.StreamHandler(sys.stdout)
-        handler.setFormatter(
-            logging.Formatter(
-                os.getenv(
-                    "PYTHON_LOG_FORMAT",
-                    "%(asctime)s | %(levelname)s | %(process)d | %(name)s | %(filename)s:%(lineno)d | %(message)s",
-                )
-            )
-        )
+        handler.setFormatter(logging.Formatter(settings.PYTHON_LOG_FORMAT))
         logger.addHandler(handler)
-        logger.setLevel(logging.INFO)
+        logger.setLevel(settings.PYTHON_LOG_LEVEL)
 
     return logger

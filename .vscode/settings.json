@@ -3,7 +3,7 @@
         "**/__pycache__": true,
         "**/.vscode-server/": true,
         "**/.ruff_cache/": true,
-        "**/.venv/"
+        "**/.venv/": true,
     },
     "files.watcherExclude": {
         "**/.git/objects/**": true,

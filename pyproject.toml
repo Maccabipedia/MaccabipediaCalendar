@@ -1,7 +1,7 @@
 [project]
 name = "MaccabipediaCalender"
 version = "1.0.0"
-description = "Maintain calenders for Maccabi games"
+description = "Maintain calenders for Maccabi Tel Aviv Matches"
 requires-python = ">=3.13"
 
 [tool.ruff]
@@ -19,7 +19,7 @@ lint.ignore = [
 
 [tool.pyright]
 include = ["**/MaccabipediaCalendar"]
-exclude = ["**/__pycache__", "tests", "**/node_modules"]
+exclude = ["**/__pycache__", "**/node_modules"]
 
 typeCheckingMode = "standard"
 
