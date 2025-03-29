@@ -18,11 +18,14 @@ def update_calendar(calendar_service: GoogleCalendarService):
     logger.info("Current time:")
     logger.info(current_time)
 
+    if settings.DELETE_ALL_MATCHES:
+        logger.info("Deleting all matches from calendar")
+        calendar_service.delete_all_events()
+
     ft_scraper = FootballScraper()
 
     # Build seasons links from the website
     seasons_links = ft_scraper.build_seasons_links()
-    logger.info(seasons_links)
 
     # Get future matches from calendar
     future_match_events = calendar_service.list_events(fetch_after_this_time=str(current_time))
@@ -34,21 +37,16 @@ def update_calendar(calendar_service: GoogleCalendarService):
     logger.info("Upcoming matches:")
     logger.info(upcoming_matches)
 
-    # Sync future matches to calendar
     logger.info("Syncing future matches to calendar")
     calendar_service.sync_future_events_to_calendar(upcoming_matches, future_match_events)
 
-    # Remove unnecessary events
     logger.info("Deleting unnecessary events")
     calendar_service.delete_unnecessary_events(upcoming_matches, future_match_events)
 
-    # Update last match
     logger.info("Updating last match")
     last_season_link = seasons_links[-1]
     last_match = ft_scraper.fetch_matches_from_site(last_season_link, to_update_last_match=True)[0]
-    last_match_event = calendar_service.list_events(
-        last_match.start.dateTime + "+02:00", 1
-    )[0]
+    last_match_event = calendar_service.list_events(last_match.start.dateTime + "+02:00", 1)[0]
     if (
         last_match_event.extendedProperties["shared"]["url"]
         == last_match.extendedProperties["shared"]["url"]
@@ -57,8 +55,8 @@ def update_calendar(calendar_service: GoogleCalendarService):
             calendar_service.update_event(last_match, last_match_event.id)
 
     # Add history matches
-    logger.info("Adding history matches")
     if settings.ADD_HISTORY_MATCHES:
+        logger.info("Adding history matches")
         for season in seasons_links:
             logger.info(f"Adding history matches from season: {season}")
             events = ft_scraper.fetch_matches_from_site(season, to_update_last_match=False)

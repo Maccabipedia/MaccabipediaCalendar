@@ -78,7 +78,7 @@ pip install -r requirements.txt
 The project uses GitHub Actions to automatically update the calendars:
 
 - Schedule: Daily at 21:05 UTC
-- Manually triggerable via workflow_dispatch
+- Manually triggered via workflow_dispatch
 - Environment variables are stored as GitHub Secrets
 
 

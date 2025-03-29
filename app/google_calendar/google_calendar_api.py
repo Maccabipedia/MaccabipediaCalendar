@@ -33,8 +33,10 @@ class GoogleCalendarService:
             self.service = build("calendar", "v3", credentials=creds)
             logger.info(f"Authenticated with Google Calendar API for {self.calendar_id}.")
         except Exception as e:
-            logger.error(f"Google Calendar authentication failed for {self.calendar_id}: {e}")
+            msg = f"Failed to authenticate with Google Calendar API for {self.calendar_id}: {e}"
+            logger.error(msg)
             self.service = None
+            raise e
 
     def init_credentials_json(self):
         """Write to credentials.json from environment variable."""
@@ -71,6 +73,29 @@ class GoogleCalendarService:
             return True
         except Exception as e:
             logger.error(f"Failed to delete event {event_id} from {self.calendar_id}: {e}")
+            return False
+
+    def delete_all_events(self) -> bool:
+        """Delete all events in the calendar."""
+        try:
+            events = self.list_events(
+                fetch_after_this_time="1970-01-01T00:00:00Z", max_events_to_fetch=9999
+            )
+            if not events:
+                logger.info(f"No events found in {self.calendar_id} to delete.")
+                return True
+
+            logger.info(f"Deleting all events in {self.calendar_id}...")
+            for event in events:
+                if event.id:
+                    self.delete_event(event.id)
+                else:
+                    logger.warning(f"Event {event} has no ID, skipping deletion.")
+
+            logger.info(f"All events deleted from {self.calendar_id}.")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to delete all events in {self.calendar_id}: {e}")
             return False
 
     def update_event(self, new_event: CalendarEvent, event_id: str) -> bool:
@@ -118,6 +143,7 @@ class GoogleCalendarService:
         """List upcoming events in the calendar."""
 
         logger.info(f"Getting all the events starting after time: {fetch_after_this_time}")
+        calendar_events: list[CalendarEvent] = []
         try:
             events_result = (
                 self.service.events()  # type: ignore
@@ -136,9 +162,9 @@ class GoogleCalendarService:
             else:
                 logger.info(f"Found {len(events)} upcoming events")
                 # Convert events to CalendarEvent objects
-                events = [CalendarEvent.model_validate(event) for event in events]
+                calendar_events = [CalendarEvent(**event) for event in events]
 
-            return events
+            return calendar_events
 
         except Exception as e:
             logger.error(f"Failed to list events in {self.calendar_id}: {e}")

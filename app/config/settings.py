@@ -39,13 +39,18 @@ class Settings(BaseSettings):
 
     NUMBER_OF_EVENTS_TO_FETCH: int = 3000
 
+    DELETE_ALL_MATCHES: bool = False
     ADD_HISTORY_MATCHES: bool = True
 
     # Calendar to update
     CALENDAR_TO_UPDATE: str = "football"
 
     # Logging Settings
-    PYTHON_LOG_LEVEL: int = logging.INFO
+    DEBUG_MODE: bool = False
+    if DEBUG_MODE:
+        PYTHON_LOG_LEVEL: int = logging.DEBUG
+    else:
+        PYTHON_LOG_LEVEL: int = logging.INFO
     PYTHON_LOG_FORMAT: str = "%(asctime)s | %(levelname)s | %(process)d | %(name)s | %(filename)s:%(lineno)d | %(message)s"
 
 

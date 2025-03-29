@@ -3,7 +3,7 @@ import re
 from datetime import datetime, timedelta
 
 import bs4
-import requests
+import httpx
 from bs4 import BeautifulSoup
 from config.logging import setup_logging
 from models.schemas import CalendarEvent, EventDate
@@ -26,10 +26,10 @@ class FootballScraper:
 
         logger.info("Building season links")
 
-        current_season_number = 74  # 2013/14
+        current_season_number = 75  # 2013/14
         while (
             "המשחק האחרון"
-            in requests.get(
+            in httpx.get(
                 self.season_link_unformatted.format(season_number=current_season_number)
             ).text
         ):
@@ -59,7 +59,7 @@ class FootballScraper:
         if not url_to_fetch:
             url_to_fetch = self.upcoming_matches_url
         # Connect to the URL
-        response = requests.get(url_to_fetch)
+        response = httpx.get(url_to_fetch)
         response.raise_for_status()
 
         # Parse HTML and save to BeautifulSoup object
@@ -73,16 +73,28 @@ class FootballScraper:
 
             for match_data in unparsed_matches:
                 # Ignoring matches without final schedule or U19 league
-                if match_data.find(text="מועד לא סופי") is None and match_data.find(text="לנוער") is None:
+                if (
+                    isinstance(match_data, bs4.element.Tag)
+                    and match_data.find(text="מועד לא סופי") is None
+                    and match_data.find(text="לנוער") is None
+                ):
                     event = self.handle_match(match_data)
+                    if "לנוער" in event.description:
+                        logger.debug(f"Ignoring U19 match: {event}")
+                        continue
                     events.append(event)
                 else:
+                    logger.debug("\n=============================================================")
                     logger.debug(f"Ignoring match without final date or a U19 match: {match_data}")
+                    logger.debug("\n=============================================================")
         else:
             # Getting last match result
             match_data = soup.find("div", {"class": "fixtures-holder"})
-            event = self.handle_match(match_data)
-            events.append(event)
+            if isinstance(match_data, bs4.element.Tag):
+                event = self.handle_match(match_data)
+                events.append(event)
+            else:
+                logger.warning("Unable to find last match data or data is not a valid Tag")
 
         return events
 
@@ -96,45 +108,72 @@ class FootballScraper:
         """
         # TODO: Finish this function
 
-        official_match_page = match.find("a", href=True).get("href")
+        match_link = match.find("a", href=True)
+        if (
+            not match_link
+            or not isinstance(match_link, bs4.element.Tag)
+            or not match_link.get("href")
+        ):
+            logger.error("No match link found in the match data")
+            raise ValueError("Missing match URL")
+
+        official_match_page = str(match_link.get("href"))
         # Connect to the URL
-        response = requests.get(official_match_page)
+        response = httpx.get(official_match_page)
         response.raise_for_status()
 
         # Parse HTML and save to BeautifulSoup object
         soup = BeautifulSoup(response.text, "html.parser")
 
         # Get match details
-        img_src = soup.find("div", {"class": "tv"})
-        if img_src and img_src.contents:
-            img_src = img_src.find("img").get("src")
-        else:
-            img_src = ""
+        tv_div = soup.find("div", {"class": "tv"})
+        img_src = ""
+        if tv_div and isinstance(tv_div, bs4.element.Tag):
+            img_element = tv_div.find("img")
+            if img_element and isinstance(img_element, bs4.element.Tag):
+                src_attr = img_element.get("src")
+                img_src = str(src_attr) if src_attr is not None else ""
         channel = self.get_channel(img_src)
 
         location_info = match.find("div", {"class": "location"})
-        time_stadium = location_info.find("div").text.split(" ")
-        location = self.get_stadium(time_stadium[1])
+        if not location_info or not isinstance(location_info, bs4.element.Tag):
+            logger.warning("No location information found in the match data")
+            raise ValueError("Missing location information")
 
-        match_date_str = location_info.find("span").text
+        div_element = location_info.find("div")
+        if not div_element or not isinstance(div_element, bs4.element.Tag):
+            logger.error("No time/stadium information found in the location data")
+            raise ValueError("Missing time/stadium information")
+
+        time_stadium = div_element.text.split(" ")
+        location = self.get_stadium(time_stadium[1] if len(time_stadium) > 1 else "")
+
+        span_element = location_info.find("span")
+        if not span_element or not isinstance(span_element, bs4.element.Tag):
+            logger.error("No date information found in the location data")
+            raise ValueError("Missing date information")
+
+        match_date_str = span_element.text
         match_date = self.format_datetime(match_date_str, time_stadium[0])
-        start_date = match_date.isoformat()
+        start_date = (match_date).isoformat()
         end_date = (match_date + timedelta(hours=2)).isoformat()
-        time_zone = "Asia/Jerusalem"
 
         if match.find("div", {"class": "Home"}) is not None:
             home_away = " - בית"
         else:
             home_away = " - חוץ"
 
-        fixture = self.get_competition(match.find("div", {"class": "league-title"}).text)
-        if match.find("div", {"class": "round"}) is not None:
-            fixture = fixture + ", " + match.find("div", {"class": "round"}).text
+        league_title_div = match.find("div", {"class": "league-title"})
+        fixture = self.get_competition(league_title_div.text if league_title_div else "")
+        round_div = match.find("div", {"class": "round"})
+        if round_div is not None:
+            fixture = fixture + ", " + round_div.text
 
-        result = self.get_result(match.find("div", {"class": "holder split"}))
+        result_div = match.find("div", {"class": "holder split"})
+        result = self.get_result(result_div if isinstance(result_div, bs4.element.Tag) else None)
 
         # Get link to match page at Maccabipedia
-        response = requests.get(
+        response = httpx.get(
             f"https://www.maccabipedia.co.il/index.php?title=Special:CargoExport&format=json&tables=Football_Games&fields=_pageName&where=Football_Games.Date='{match_date.date()}'"
         )
         page_name = json.loads(response.text)
@@ -148,12 +187,14 @@ class FootballScraper:
             page_name = ""
             match_page_link = '\n<a href="https://maccabipedia.co.il">מכביפדיה</a>'
 
+        opponent_div = match.find("div", {"class": "holder notmaccabi nn"})
+        opponent_name = opponent_div.text if opponent_div else "יריבה לא ידועה"
         event = CalendarEvent(
-            summary=match.find("div", {"class": "holder notmaccabi nn"}).text + home_away,
+            summary="⚽ " + opponent_name + home_away,
             location=location,
             description=fixture + result + channel + match_page_link,
-            start=EventDate(dateTime=start_date, timeZone=time_zone),
-            end=EventDate(dateTime=end_date, timeZone=time_zone),
+            start=EventDate(dateTime=start_date),
+            end=EventDate(dateTime=end_date),
             source={"url": f"https://www.maccabipedia.co.il/{page_name}", "title": "עמוד המשחק"},
             extendedProperties={"shared": {"url": official_match_page, "result": result}},
         )
@@ -162,12 +203,12 @@ class FootballScraper:
 
     def get_channel(self, x: str) -> str:
         return {
-            "https://static.maccabi-tlv.co.il/wp-content/uploads/2015/11/1949-300x62.png": "ספורט1\n",
-            "https://static.maccabi-tlv.co.il/wp-content/uploads/2023/07/MTA_202307161102372351947d86ebda6f4ca21f9a1b925c63-300x81.png": "ספורט1\n",
-            "https://static.maccabi-tlv.co.il/wp-content/uploads/2023/07/MTA_202307161101594c354ace1560ac3c93356ce1816e2a21-300x78.png": "ספורט2\n",
-            "https://static.maccabi-tlv.co.il/wp-content/uploads/2023/07/MTA_20230716110202545b088a9368be6285a53e59da64259d-300x78.png": "ספורט3\n",
-            "https://static.maccabi-tlv.co.il/wp-content/uploads/2023/07/MTA_202307161101541f9bda37ca4f08fc779a8421e22a973a-300x77.png": "ספורט4\n",
-            "https://static.maccabi-tlv.co.il/wp-content/uploads/2015/11/sport-chanel.png": "ערוץ הספורט\n",
+            "https://static.maccabi-tlv.co.il/wp-content/uploads/2015/11/1949-300x62.png": "\nספורט1",
+            "https://static.maccabi-tlv.co.il/wp-content/uploads/2023/07/MTA_202307161102372351947d86ebda6f4ca21f9a1b925c63-300x81.png": "\nספורט1",
+            "https://static.maccabi-tlv.co.il/wp-content/uploads/2023/07/MTA_202307161101594c354ace1560ac3c93356ce1816e2a21-300x78.png": "\nספורט2",
+            "https://static.maccabi-tlv.co.il/wp-content/uploads/2023/07/MTA_20230716110202545b088a9368be6285a53e59da64259d-300x78.png": "\nספורט3",
+            "https://static.maccabi-tlv.co.il/wp-content/uploads/2023/07/MTA_202307161101541f9bda37ca4f08fc779a8421e22a973a-300x77.png": "\nספורט4",
+            "https://static.maccabi-tlv.co.il/wp-content/uploads/2015/11/sport-chanel.png": "\nערוץ הספורט",
         }.get(x, "")
 
     def get_month(self, x: str) -> int:
@@ -196,21 +237,29 @@ class FootballScraper:
             "היא באשדוד": 'איצטדיון עירוני הי"א',
             "אשדוד": 'איצטדיון עירוני הי"א',
             "סמי עופר": "אצטדיון סמי עופר",
-            "טרנר": "אצטדיון טוטו טרנר",
+            "טרנר": "אצטדיון טרנר",
+            "טוטו טרנר": "אצטדיון טרנר",
             "קריית שמונה": "אצטדיון כדורגל קרית שמונה",
             "המושבה": "אצטדיון המושבה",
+            "שלמה ביטוח": "אצטדיון המושבה",
             "דוחא": "אצטדיון דוחה",
+            "גרין": "אצטדיון גרין",
             "רמת גן": "אצטדיון רמת גן",
             "טוטו עכו": "אצטדיון טוטו עכו",
             "טוטו - עכו": "אצטדיון טוטו עכו",
             "עכו": "אצטדיון טוטו עכו",
+            "אצטדיון עכו": "אצטדיון טוטו עכו",
             "סלה": "אצטדיון סלה",
+            "איצטדיון פרטיזן": "איצטדיון פרטיזן",
+            "יוהאן קרויף ארינה": "יוהאן קרויף ארינה",
         }.get(x, "")
 
     def get_competition(self, x: str) -> str:
         return {
             "ליגת הבורסה לניירות ערך": "ליגת העל",
             "ליגת Winner": "ליגת העל",
+            "ליגת WINNER": "ליגת העל",
+            "ליגת one zero הבנק הדיגיטלי": "ליגת העל",
             "ליגת ג׳פניקה": "ליגת העל",
         }.get(x, x)
 
@@ -223,6 +272,9 @@ class FootballScraper:
         :return: string with the result if there is data, else returns empty string
         """
 
+        if not date_str or not isinstance(date_str, str):
+            raise ValueError("Invalid date string")
+
         arr = date_str.split(" ")
         year = int(arr[2])
         month = self.get_month(arr[1])
@@ -231,19 +283,21 @@ class FootballScraper:
             hour = 20
             minutes = 0
         else:
-            time = time.split(":")
-            hour = int(time[0])
-            minutes = int(time[1])
+            time_parts = time.split(":")
+            hour = int(time_parts[0])
+            minutes = int(time_parts[1])
 
         return datetime(year, month, day, hour, minutes)
 
-    def get_result(self, div: BeautifulSoup):
+    def get_result(self, div: bs4.element.Tag | None):
         """
         Parsing div to get the match's result
 
-        :param div: string of html
+        :param div: BeautifulSoup Tag containing match result information
         :return: string with the result if there is data, else returns empty string
         """
+        if not div:
+            return ""
 
         maccabi_score = div.find("span", {"class": "ss maccabi h"})
         rival_score = div.find("span", {"class": "ss h"})
