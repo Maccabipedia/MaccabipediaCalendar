@@ -2,11 +2,12 @@ import sys
 from datetime import datetime, timezone
 
 from config.logging import setup_logging
-from config.settings import settings
+from config.settings import get_settings
 from google_calendar.google_calendar_api import GoogleCalendarService
 from scrapers.football_scraper import FootballScraper
 
 logger = setup_logging(__name__)
+settings = get_settings()
 
 
 def update_calendar(calendar_service: GoogleCalendarService):

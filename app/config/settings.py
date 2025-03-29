@@ -1,5 +1,6 @@
 import logging
 import re
+from functools import lru_cache
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -54,4 +55,11 @@ class Settings(BaseSettings):
     PYTHON_LOG_FORMAT: str = "%(asctime)s | %(levelname)s | %(process)d | %(name)s | %(filename)s:%(lineno)d | %(message)s"
 
 
-settings = Settings()
+# Cache the settings object
+@lru_cache
+def get_settings() -> Settings:
+    """
+    Get the settings object.
+    This function is cached to improve performance.
+    """
+    return Settings()

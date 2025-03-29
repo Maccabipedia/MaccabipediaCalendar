@@ -2,12 +2,13 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from config.logging import setup_logging
-from config.settings import settings
+from config.settings import get_settings
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from models.schemas import CalendarEvent
 
 logger = setup_logging(__name__)
+settings = get_settings()
 
 # Path to the Google service account credentials
 _CURRENT_FOLDER = Path(__file__).parent.absolute()
