@@ -6,8 +6,6 @@ from pydantic import BaseModel, field_validator
 class EventDate(BaseModel):
     dateTime: str
     timeZone: str = "Asia/Jerusalem"  # Default timezone
-
-
 class CalendarEvent(BaseModel):
     id: str = ""
     summary: str
