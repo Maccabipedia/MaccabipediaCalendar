@@ -47,7 +47,7 @@ Later we added support for additional sports such as Basketball.
 
 ### Prerequisites
 
-* Python >= 3.13
+* Python >= 3.11
 
 ### Installation
 
@@ -66,7 +66,7 @@ GOOGLE_CREDENTIALS='your_service_account_json_info'
 5. Install Python packages in virtual environment:
 ```bash
 sudo apt install python-virtualenv # In case it's not installed
-python3.13 -m venv .venv
+python3.11 -m venv .venv
 source ./.venv/bin/activate
 pip install -r requirements.txt
 ```
