@@ -10,6 +10,28 @@ logger = setup_logging(__name__)
 settings = get_settings()
 
 
+def update_last_match_result(ft_scraper, calendar_service, seasons_links):
+    """
+    Updates the result of the last match in the calendar if needed.
+
+    Args:
+        ft_scraper: The football scraper instance
+        calendar_service: The Google Calendar service instance
+        seasons_links: List of season links from which to get the last match
+    """
+    last_season_link = seasons_links[-1]
+    last_match = ft_scraper.fetch_matches_from_site(last_season_link, to_update_last_match=True)[0]
+    last_match_event = calendar_service.list_events(last_match.start.dateTime + "+02:00", 1)[0]
+    if (
+        last_match_event.extendedProperties["shared"]["url"]
+        == last_match.extendedProperties["shared"]["url"]
+    ):
+        if last_match_event.extendedProperties["shared"]["result"] == "":
+            calendar_service.update_event(last_match, last_match_event.id)
+
+    logger.info("Last match result updated if needed")
+
+
 def update_football_calendar(calendar_service: GoogleCalendarService):
     """
     Update the calendar with upcoming matches from the Maccabi TLV site.
@@ -17,7 +39,6 @@ def update_football_calendar(calendar_service: GoogleCalendarService):
     # Current DateTime - Update and add upcoming matches only
     current_time = datetime.now(timezone.utc).replace(tzinfo=None).isoformat() + "Z"
     logger.info(f"Current time: {current_time}")
-
 
     ft_scraper = football_scraper()
 
@@ -39,15 +60,7 @@ def update_football_calendar(calendar_service: GoogleCalendarService):
     calendar_service.delete_unnecessary_events(upcoming_matches, future_match_events)
 
     logger.info("Updating last match")
-    last_season_link = seasons_links[-1]
-    last_match = ft_scraper.fetch_matches_from_site(last_season_link, to_update_last_match=True)[0]
-    last_match_event = calendar_service.list_events(last_match.start.dateTime + "+02:00", 1)[0]
-    if (
-        last_match_event.extendedProperties["shared"]["url"]
-        == last_match.extendedProperties["shared"]["url"]
-    ):
-        if last_match_event.extendedProperties["shared"]["result"] == "":
-            calendar_service.update_event(last_match, last_match_event.id)
+    update_last_match_result(ft_scraper, calendar_service, seasons_links)
 
     # Add history matches
     if settings.ADD_HISTORY_MATCHES:
