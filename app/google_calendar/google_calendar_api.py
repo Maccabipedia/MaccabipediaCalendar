@@ -74,7 +74,7 @@ class GoogleCalendarService:
             return True
         except Exception as e:
             logger.error(f"Failed to delete event {event_id} from {self.calendar_id}: {e}")
-            return False
+            raise e
 
     def delete_all_events(self) -> bool:
         """Delete all events in the calendar."""
@@ -169,7 +169,7 @@ class GoogleCalendarService:
 
         except Exception as e:
             logger.error(f"Failed to list events in {self.calendar_id}: {e}")
-            return []
+            raise e
 
     def search_event_in_calendar(
         self, event: CalendarEvent, events_list: list[CalendarEvent]
@@ -218,7 +218,7 @@ class GoogleCalendarService:
             return True
         except Exception as e:
             logger.error(f"Failed to sync future events to calendar: {e}")
-            return False
+            raise e
 
     def delete_unnecessary_events(
         self,
