@@ -10,7 +10,9 @@ logger = setup_logging(__name__)
 settings = get_settings()
 
 
-def update_last_match_result(ft_scraper, calendar_service, seasons_links):
+def update_last_match_result(
+    ft_scraper: football_scraper, calendar_service: GoogleCalendarService, seasons_links: list[str]
+):
     """
     Updates the result of the last match in the calendar if needed.
 
