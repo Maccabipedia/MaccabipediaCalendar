@@ -11,7 +11,7 @@ from models.schemas import CalendarEvent, EventDate
 logger = setup_logging(__name__)
 
 
-class FootballScraper:
+class football_scraper:
     """
     Scraper for Maccabi Tel Aviv football matches
     """
@@ -26,21 +26,15 @@ class FootballScraper:
 
         logger.info("Building season links")
 
-        current_season_number = 75  # 2013/14
+        season_num = 75  # 2013/14
         while (
             "המשחק האחרון"
-            in httpx.get(
-                self.season_link_unformatted.format(season_number=current_season_number)
-            ).text
+            in httpx.get(self.season_link_unformatted.format(season_number=season_num)).text
         ):
-            self.seasons_links.append(
-                self.season_link_unformatted.format(season_number=current_season_number)
-            )
-            logger.info(
-                f"Added new season: {current_season_number - 62}/{str(current_season_number - 61)[-2:]}"
-            )
+            self.seasons_links.append(self.season_link_unformatted.format(season_number=season_num))
+            logger.info(f"Added season: {season_num - 62}/{str(season_num - 61)[-2:]}")
 
-            current_season_number += 1
+            season_num += 1
 
         logger.info(f"Finished to build season links, total seasons: {len(self.seasons_links)}")
         return self.seasons_links
