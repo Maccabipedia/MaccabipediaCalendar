@@ -20,5 +20,10 @@ jobs:
           CALENDAR_ID: ${{ secrets.CALENDAR_ID }}
           GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
         run: python main.py
-      - name: Keepalive Workflow
-        uses: gautamkrishnar/keepalive-workflow@v2
+  workflow-keepalive:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - uses: liskin/gh-workflow-keepalive@v1
