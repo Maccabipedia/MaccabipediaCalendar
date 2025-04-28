@@ -1,5 +1,5 @@
 # Maccabipedia Calendar
-Maccabipedia's Calendar is a small python program to scrap data about games schedule from [Maccabi Tel Aviv Official Site](maccabi-tlv.co.il), parse it and display the games as events in Google Calendar.
+The MaccabipediaCalendar project is a Python application that scrapes match schedules and results for Maccabi Tel Aviv sports teams from official websites, then synchronizes this data with Google Calendar. The application provides automated calendar updates for different sports including football, basketball, volleyball, and handball.
 
 
 <!-- PROJECT SHIELDS -->
@@ -13,7 +13,7 @@ Maccabipedia's Calendar is a small python program to scrap data about games sche
 [![Contributors][contributors-shield]][contributors-url]
 [![Twitter Follow][follow-shield]][follow-url]
 
-<!-- TABLE OF CONTENTS -->
+
 ## Table of Contents
 
 * [About the Project](#about-the-project)
@@ -21,31 +21,33 @@ Maccabipedia's Calendar is a small python program to scrap data about games sche
 * [Getting Started](#getting-started)
   * [Prerequisites](#prerequisites)
   * [Installation](#installation)
+* [GitHub Actions Workflow](#github-actions-workflow)
+* [Common Issues and Troubleshooting](#common-issues-and-troubleshooting)
+* [Future Development Ideas](#future-development-ideas)
 * [Contributing](#contributing)
 * [Contact](#contact)
 
 
-
-<!-- ABOUT THE PROJECT -->
 ## About The Project
 
-We wanted to have a calender for for Maccabi games, but without manual updating.
-So we decided to scrap the data from the official site and automate the proccess as much as possible.
+We wanted to have a calender for for Maccabi matches in Football, but without manual updating.
+So we decided to scrap the data from the official site and automate the process as much as possible.
+Later we added support for additional sports such as Basketball.
 
 ### Built With
 * Python
 * [BeautifulSoup](https://www.crummy.com/software/BeautifulSoup/)
 * [googleapiclient](https://github.com/googleapis/google-api-python-client)
+* [Pydantic](https://docs.pydantic.dev/latest/)
 
 
-<!-- GETTING STARTED -->
 ## Getting Started
 
 1. Have a Google account with Google Developer Console
 
 ### Prerequisites
 
-* Python >= 3.8
+* Python >= 3.11
 
 ### Installation
 
@@ -53,22 +55,47 @@ So we decided to scrap the data from the official site and automate the proccess
 
 2. Create .env file, insert your calendar id and save it in repo directory:
 ```env
-calendar_id = 'your_calendar_id'
+CALENDAR_ID = 'your_calendar_id'
+GOOGLE_CREDENTIALS='your_service_account_json_info'
 ```
 
-3. Create OAuth 2.0 Client Credentials for your user at [Google Developer Console](https://console.developers.google.com/a)
+3. Create OAuth 2.0 Client Credentials for your user at [Google Developer Console](https://console.developers.google.com/)
 
-4. Download the credentials & save them as 'credentials.json'
+4. Download the credentials & save them inside GOOGLE_CREDENTIALS (Remove any spaces or line breaks)
 
-5. Install Python packages
-```python
-pip install 
+5. Install Python packages in virtual environment:
+```bash
+sudo apt install python-virtualenv # In case it's not installed
+python3.11 -m venv .venv
+source ./.venv/bin/activate
+pip install -r requirements.txt
 ```
 
 6. run main.py
 
 
-<!-- CONTRIBUTING -->
+## GitHub Actions Workflow
+The project uses GitHub Actions to automatically update the calendars:
+
+- Schedule: Daily at 21:05 UTC
+- Manually triggered via workflow_dispatch
+- Environment variables are stored as GitHub Secrets
+
+
+## Common Issues and Troubleshooting
+- Authentication Errors: Verify GOOGLE_CREDENTIALS is valid and formatted correctly
+- Scraping Failures: Check if website structure has changed
+- Missing Events: Verify that the event matching logic is working correctly
+
+
+## Future Development Ideas
+- Support for additional Maccabi sports teams
+- Enhanced error reporting
+- Mobile notifications for upcoming matches
+- Historical data analysis and visualizations
+- Scraping into external DB, extracting from DB into Calendar
+
+
 ## Contributing
 
 Pull requests are welcome.
@@ -78,7 +105,6 @@ For major changes, please open an issue first to discuss what you would like to 
 Best to talk with us first!
 
 
-
 <!-- LICENSE
 ## License
 
@@ -86,16 +112,15 @@ Distributed under the MIT License. See `LICENSE` for more information.
  -->
 
 
-
-<!-- CONTACT -->
 ## Contact
 
 Maccabipedia - [@maccabipedia](https://twitter.com/maccabipedia) - maccabipedia@gmail.com
 
+[kosh-b](https://github.com/kosh-b)
+
 [Shlomixg](https://github.com/Shlomixg)
 
 Project Link: [https://github.com/Maccabipedia/MaccabipediaCalendar](https://github.com/Maccabipedia/MaccabipediaCalendar)
-
 
 
 <!-- MARKDOWN LINKS & IMAGES -->

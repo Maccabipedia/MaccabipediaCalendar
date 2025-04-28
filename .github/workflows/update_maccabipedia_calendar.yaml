@@ -1,7 +1,7 @@
 name: Update MaccabiPedia Calendar
 on:
   schedule:
-    - cron: "0 20 * * *"
+    - cron: "5 21 * * *"
   workflow_dispatch:
 
 jobs:
@@ -17,8 +17,12 @@ jobs:
         run: pip install -r requirements.txt
       - name: Update MaccabiPedia Calendar
         env:
-          CALENDAR_ID: ${{ secrets.CALENDAR_ID }}
           GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+          FOOTBALL_CALENDAR_ID: ${{ secrets.FOOTBALL_CALENDAR_ID }}
+          BASKETBALL_CALENDAR_ID: ${{ secrets.BASKETBALL_CALENDAR_ID }}
+          VOLLEYBALL_CALENDAR_ID: ${{ secrets.VOLLEYBALL_CALENDAR_ID }}
+          HANDBALL_CALENDAR_ID: ${{ secrets.HANDBALL_CALENDAR_ID }}
+          CALENDAR_TO_UPDATE: ${{ secrets.CALENDAR_TO_UPDATE }}
         run: python main.py
   workflow-keepalive:
     if: github.event_name == 'schedule'
